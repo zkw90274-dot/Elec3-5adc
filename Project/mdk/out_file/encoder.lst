@@ -1,0 +1,53 @@
+C251 COMPILER V5.60.0,  encoder                                                            14/01/26  23:11:45  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE encoder
+OBJECT MODULE PLACED IN .\out_file\encoder.obj
+COMPILER INVOKED BY: E:\Tools\keil5\Keil_v5\C251\BIN\C251.EXE ..\code\encoder.c LARGE NOALIAS WARNINGLEVEL(3) OPTIMIZE(S
+                    -IZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_
+                    -driver;..\user;..\code) DEBUG PRINT(.\out_file\encoder.lst) TABS(2) OBJECT(.\out_file\encoder.obj) 
+
+stmt  level    source
+
+    1          //头文件引用
+    2          #include "encoder.h"
+    3          
+    4          
+    5          //变量定义
+    6          int16 encoder_data_dir_L = 0;               //左编码器
+    7          int16 encoder_data_dir_R = 0;               //右编码器
+    8          
+    9          
+   10          //函数定义
+   11          void Encoder_Init(void)
+   12          {
+   13   1          encoder_dir_init(ENCODER_DIR_R, ENCODER_DIR_DIR_R, ENCODER_DIR_PULSE_R);    // 初始化编码器模块与引脚
+             - 带方向增量编码器模式
+   14   1          encoder_dir_init(ENCODER_DIR_L, ENCODER_DIR_DIR_L, ENCODER_DIR_PULSE_L);    // 初始化编码器模块与引脚
+             - 带方向增量编码器模式
+   15   1      
+   16   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =        28     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =         4     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        14     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

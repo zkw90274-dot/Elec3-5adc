@@ -1,0 +1,132 @@
+C251 COMPILER V5.60.0,  key                                                                14/01/26  23:11:44  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE key
+OBJECT MODULE PLACED IN .\out_file\key.obj
+COMPILER INVOKED BY: E:\Tools\keil5\Keil_v5\C251\BIN\C251.EXE ..\code\key.c LARGE NOALIAS WARNINGLEVEL(3) OPTIMIZE(SIZE)
+                    - BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driv
+                    -er;..\user;..\code) DEBUG PRINT(.\out_file\key.lst) TABS(2) OBJECT(.\out_file\key.obj) 
+
+stmt  level    source
+
+    1          // 头文件包含
+    2          #include "key.h"
+    3          
+    4          // 全局变量定义
+    5          uint8 key_val, key_old, key_down, key_up;
+    6          
+    7          //-------------------------------------------------------------------------------------------------------
+             -------------
+    8          // 函数简介     按键初始化
+    9          // 参数说明     void
+   10          // 返回参数     void
+   11          // 使用示例     key_init();
+   12          // 备注信息     配置6个按键为上拉输入模式
+   13          //-------------------------------------------------------------------------------------------------------
+             -------------
+   14          void key_init(void)
+   15          {
+   16   1          gpio_init(IO_P32, GPI, 1, GPI_PULL_UP);
+   17   1          gpio_init(IO_P33, GPI, 1, GPI_PULL_UP);
+   18   1          gpio_init(IO_P36, GPI, 1, GPI_PULL_UP);
+   19   1      
+   20   1          gpio_init(IO_P50, GPI, 1, GPI_PULL_UP);
+   21   1          gpio_init(IO_P51, GPI, 1, GPI_PULL_UP);
+   22   1          gpio_init(IO_P37, GPI, 1, GPI_PULL_UP);
+   23   1      }
+   24          
+   25          //-------------------------------------------------------------------------------------------------------
+             -------------
+   26          // 函数简介     按键扫描
+   27          // 参数说明     void
+   28          // 返回参数     uint8           按键键值 1-6，无按键按下返回0
+   29          // 使用示例     uint8 key = Key_Scan();
+   30          // 备注信息     检测6个按键的状态
+   31          //-------------------------------------------------------------------------------------------------------
+             -------------
+   32          uint8 Key_Scan(void)
+   33          {
+   34   1          uint8 key_temp = 0;
+   35   1          if(gpio_get_level(IO_P32) == 0) key_temp = 1;
+   36   1          if(gpio_get_level(IO_P33) == 0) key_temp = 2;
+   37   1          if(gpio_get_level(IO_P36) == 0) key_temp = 3;
+   38   1          if(gpio_get_level(IO_P50) == 0) key_temp = 4;
+   39   1          if(gpio_get_level(IO_P51) == 0) key_temp = 5;
+   40   1          if(gpio_get_level(IO_P37) == 0) key_temp = 6;
+   41   1          return key_temp;
+   42   1      }
+   43          
+   44          //-------------------------------------------------------------------------------------------------------
+             -------------
+   45          // 函数简介     按键处理
+   46          // 参数说明     void
+   47          // 返回参数     void
+   48          // 使用示例     Key_Disp();
+   49          // 备注信息     检测按键按下和释放事件，更新按键状态
+   50          //              key_down: 按键按下标志
+   51          //              key_up:   按键释放标志
+   52          //-------------------------------------------------------------------------------------------------------
+C251 COMPILER V5.60.0,  key                                                                14/01/26  23:11:44  PAGE 2   
+
+             -------------
+   53          void Key_Disp(void)
+   54          {
+   55   1          key_val = Key_Scan();
+   56   1          key_down = key_val & (key_val ^ key_old);
+   57   1          key_up = ~key_val & (key_val ^ key_old);
+   58   1          key_old = key_val;
+   59   1      
+   60   1          if(key_down == 1)
+   61   1          {
+   62   2              lcd_cnt++;
+   63   2          }
+   64   1      
+   65   1          if(key_down == 2)
+   66   1          {
+   67   2              lcd_cnt++;
+   68   2          }
+   69   1      
+   70   1          if(key_down == 3)
+   71   1          {
+   72   2              lcd_cnt++;
+   73   2          }
+   74   1      
+   75   1          if(key_down == 4)
+   76   1          {
+   77   2              lcd_cnt++;
+   78   2          }
+   79   1      
+   80   1          if(key_down == 5)
+   81   1          {
+   82   2              lcd_cnt++;
+   83   2          }
+   84   1      
+   85   1          if(key_down == 6)
+   86   1          {
+   87   2              lcd_cnt++;
+   88   2          }
+   89   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       285     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =         4     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

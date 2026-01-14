@@ -1,0 +1,162 @@
+C251 COMPILER V5.60.0,  adc                                                                14/01/26  23:11:44  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE adc
+OBJECT MODULE PLACED IN .\out_file\adc.obj
+COMPILER INVOKED BY: E:\Tools\keil5\Keil_v5\C251\BIN\C251.EXE ..\code\adc.c LARGE NOALIAS WARNINGLEVEL(3) OPTIMIZE(SIZE)
+                    - BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driv
+                    -er;..\user;..\code) DEBUG PRINT(.\out_file\adc.lst) TABS(2) OBJECT(.\out_file\adc.obj) 
+
+stmt  level    source
+
+    1          //-------------------------------------------------------------------------------------------------------
+             -------------
+    2          // 头文件包含
+    3          //-------------------------------------------------------------------------------------------------------
+             -------------
+    4          #include "adc.h"
+    5          
+    6          //-------------------------------------------------------------------------------------------------------
+             -------------
+    7          // 全局变量定义
+    8          //-------------------------------------------------------------------------------------------------------
+             -------------
+    9          uint16 adc_val_list[CHANNEL_NUMBER] = {0};                      // ADC原始值数组
+   10          uint8 channel_index = 0;                                        // 当前通道索引
+   11          
+   12          // ADC通道枚举数组 - 按从左到右顺序排列
+   13          adc_channel_enum channel_list[CHANNEL_NUMBER] =
+   14          {
+   15              ADC_L1, ADC_L2, ADC_M3, ADC_R4, ADC_R5
+   16          };
+   17          
+   18          // ADC最大最小值校准数组 [偶数索引=最大值, 奇数索引=最小值]
+   19          // 需要根据实际传感器校准修改这些值
+   20          uint16 max_min_adc[2*CHANNEL_NUMBER] = {
+   21              3532, 0,     // L1: 最大值, 最小值
+   22              3522, 0,     // L2: 最大值, 最小值
+   23              3550, 0,     // M3: 最大值, 最小值
+   24              3516, 0,     // R4: 最大值, 最小值
+   25              3548, 0,     // R5: 最大值, 最小值
+   26          };
+   27          
+   28          //-------------------------------------------------------------------------------------------------------
+             -------------
+   29          // 函数简介     ADC全部通道初始化
+   30          // 参数说明     void
+   31          // 返回参数     void
+   32          // 使用示例     Adc_All_Init();
+   33          // 备注信息     初始化5个ADC通道为12位精度
+   34          //-------------------------------------------------------------------------------------------------------
+             -------------
+   35          void Adc_All_Init(void)
+   36          {
+   37   1          adc_init(ADC_L1, ADC_12BIT);         // L1 左侧传感器1
+   38   1          adc_init(ADC_L2, ADC_12BIT);         // L2 左侧传感器2
+   39   1          adc_init(ADC_M3, ADC_12BIT);         // M3 中间传感器
+   40   1          adc_init(ADC_R4, ADC_12BIT);         // R4 右侧传感器4
+   41   1          adc_init(ADC_R5, ADC_12BIT);         // R5 右侧传感器5
+   42   1      }
+   43          
+   44          //-------------------------------------------------------------------------------------------------------
+             -------------
+   45          // 函数简介     ADC值限幅
+   46          // 参数说明     adc_val         ADC原始值
+   47          // 参数说明     index           通道索引 (0-4)
+   48          // 返回参数     uint16          限幅后的ADC值
+   49          // 使用示例     uint16 val = limit(adc_val, 0);
+   50          // 备注信息     将ADC值限制在校准的最大最小值范围内
+C251 COMPILER V5.60.0,  adc                                                                14/01/26  23:11:44  PAGE 2   
+
+   51          //-------------------------------------------------------------------------------------------------------
+             -------------
+   52          uint16 limit(uint16 adc_val, uint8 index)
+   53          {
+   54   1          if(adc_val > max_min_adc[2*index])
+   55   1          {
+   56   2              adc_val = max_min_adc[2*index];
+   57   2          }
+   58   1          if(adc_val < max_min_adc[2*index+1])
+   59   1          {
+   60   2              adc_val = max_min_adc[2*index+1];
+   61   2          }
+   62   1          return adc_val;
+   63   1      }
+   64          
+   65          //-------------------------------------------------------------------------------------------------------
+             -------------
+   66          // 函数简介     ADC测试函数
+   67          // 参数说明     void
+   68          // 返回参数     void
+   69          // 使用示例     Adc_Test();
+   70          // 备注信息     打印所有通道的ADC原始值和平均值滤波后的值
+   71          //-------------------------------------------------------------------------------------------------------
+             -------------
+   72          void Adc_Test(void)
+   73          {
+   74   1          // 打印原始转换值
+   75   1          for(channel_index = 0; channel_index < CHANNEL_NUMBER; channel_index++)
+   76   1          {
+   77   2              printf("ADC channel %d convert data is %d.\r\n",
+   78   2                     channel_index + 1,
+   79   2                     adc_convert(channel_list[channel_index]));
+   80   2          }
+   81   1          system_delay_ms(1000);
+   82   1      
+   83   1          // 打印平均值滤波后的值
+   84   1          for(channel_index = 0; channel_index < CHANNEL_NUMBER; channel_index++)
+   85   1          {
+   86   2              printf("ADC channel %d mean filter convert data is %d.\r\n",
+   87   2                     channel_index + 1,
+   88   2                     adc_mean_filter_convert(channel_list[channel_index], 10));
+   89   2          }
+   90   1          system_delay_ms(500);
+   91   1      }
+   92          
+   93          //-------------------------------------------------------------------------------------------------------
+             -------------
+   94          // 函数简介     获取所有ADC值并限幅
+   95          // 参数说明     void
+   96          // 返回参数     void
+   97          // 使用示例     Adc_Getval();
+   98          // 备注信息     获取5个通道的ADC值，进行10次平均值滤波并限幅
+   99          //              结果保存在 adc_val_list[] 数组中
+  100          //-------------------------------------------------------------------------------------------------------
+             -------------
+  101          void Adc_Getval(void)
+  102          {
+  103   1          for(channel_index = 0; channel_index < CHANNEL_NUMBER; channel_index++)
+  104   1          {
+  105   2              // 获取ADC值 -> 10次平均值滤波 -> 限幅
+  106   2              adc_val_list[channel_index] = limit(
+  107   2                  adc_mean_filter_convert(channel_list[channel_index], 10),
+  108   2                  channel_index
+  109   2              );
+  110   2          }
+  111   1      }
+C251 COMPILER V5.60.0,  adc                                                                14/01/26  23:11:44  PAGE 3   
+
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       367     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =        41     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =       147     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

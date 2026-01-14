@@ -1,0 +1,406 @@
+C251 COMPILER V5.60.0,  IMU                                                                14/01/26  23:11:45  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE IMU
+OBJECT MODULE PLACED IN .\out_file\IMU.obj
+COMPILER INVOKED BY: E:\Tools\keil5\Keil_v5\C251\BIN\C251.EXE ..\code\IMU.c LARGE NOALIAS WARNINGLEVEL(3) OPTIMIZE(SIZE)
+                    - BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driv
+                    -er;..\user;..\code) DEBUG PRINT(.\out_file\IMU.lst) TABS(2) OBJECT(.\out_file\IMU.obj) 
+
+stmt  level    source
+
+    1          //头文件包含
+    2          #include "IMU.h"
+    3          
+    4          
+    5          // 全局变量定义
+    6          IMUData imu;
+    7          
+    8          //互补滤波系数
+    9          #define COMP_FILTER_Kp           0.5f             // 互补滤波比例增益
+   10          #define COMP_FILTER_Ki           0.001f           // 互补滤波积分增益
+   11          
+   12          // 互补滤波积分误差累计量
+   13          static float ex_int = 0, ey_int = 0, ez_int = 0;
+   14          
+   15          //-------------------------------------------------------------------------------------------------------
+             -------------
+   16          // 函数简介     反正弦函数 (实现asinf)
+   17          // 参数说明     x               输入值 [-1, 1]
+   18          // 返回参数     float           反正弦值 (弧度)
+   19          // 备注信息     使用多项式近似实现
+   20          //-------------------------------------------------------------------------------------------------------
+             -------------
+   21          static float my_asin(float x)
+   22          {
+   23   1          float neg, result, temp;
+   24   1      
+   25   1          neg = 0;
+   26   1          if(x > 1.0f)
+   27   1              x = 1.0f;
+   28   1          if(x < -1.0f)
+   29   1              x = -1.0f;
+   30   1      
+   31   1          if(x < 0)
+   32   1          {
+   33   2              neg = 1;
+   34   2              x = -x;
+   35   2          }
+   36   1      
+   37   1          // 使用多项式近似，避免递归
+   38   1          if(x > 0.7071f)
+   39   1          {
+   40   2              // 对于接近1的值，使用变换后的多项式
+   41   2              temp = 1.0f - x;
+   42   2              result = 1.57079633f - 0.5f * temp * (1.0f + temp * (0.166666f + temp * 0.075f));
+   43   2          }
+   44   1          else
+   45   1          {
+   46   2              temp = x * x;
+   47   2              result = x * (1.0f + temp * (0.166666f + temp * (0.075f + temp * 0.04464f)));
+   48   2          }
+   49   1      
+   50   1          if(neg)
+   51   1              result = -result;
+   52   1      
+   53   1          return result;
+   54   1      }
+   55          
+C251 COMPILER V5.60.0,  IMU                                                                14/01/26  23:11:45  PAGE 2   
+
+   56          //-------------------------------------------------------------------------------------------------------
+             -------------
+   57          // 函数简介     反正切函数 (实现atan2f)
+   58          // 参数说明     y               y坐标
+   59          // 参数说明     x               x坐标
+   60          // 返回参数     float           反正切值 (弧度)
+   61          // 备注信息     实现atan2(y,x)功能
+   62          //-------------------------------------------------------------------------------------------------------
+             -------------
+   63          static float my_atan2(float y, float x)
+   64          {
+   65   1          float abs_x, abs_y, angle, r;
+   66   1      
+   67   1          if(x == 0.0f && y == 0.0f)
+   68   1              return 0.0f;
+   69   1      
+   70   1          if(x >= 0)
+   71   1              abs_x = x;
+   72   1          else
+   73   1              abs_x = -x;
+   74   1      
+   75   1          if(y >= 0)
+   76   1              abs_y = y;
+   77   1          else
+   78   1              abs_y = -y;
+   79   1      
+   80   1          if(abs_y > abs_x)
+   81   1          {
+   82   2              r = abs_x / abs_y;
+   83   2              angle = 1.57079633f - r * (0.1963f + r * -0.9817f);
+   84   2          }
+   85   1          else
+   86   1          {
+   87   2              r = abs_y / abs_x;
+   88   2              angle = r * (0.1963f + r * -0.9817f);
+   89   2          }
+   90   1      
+   91   1          if(x < 0)
+   92   1              angle = 3.14159265f - angle;
+   93   1      
+   94   1          if(y < 0)
+   95   1              angle = -angle;
+   96   1      
+   97   1          return angle;
+   98   1      }
+   99          
+  100          //-------------------------------------------------------------------------------------------------------
+             -------------
+  101          // 函数简介     快速平方根倒数算法
+  102          // 参数说明     x               输入值
+  103          // 返回参数     float           1/sqrt(x)
+  104          // 使用示例     float y = fast_inv_sqrt(x);
+  105          // 备注信息     使用快速算法计算平方根倒数
+  106          //-------------------------------------------------------------------------------------------------------
+             -------------
+  107          float fast_inv_sqrt(float x)
+  108          {
+  109   1          float halfx = 0.5f * x;
+  110   1          float y = x;
+  111   1          long i = *(long *)&y;
+  112   1          i = 0x5f3759df - (i >> 1);
+  113   1          y = *(float *)&i;
+  114   1          y = y * (1.5f - (halfx * y * y));
+  115   1          return y;
+  116   1      }
+  117          
+C251 COMPILER V5.60.0,  IMU                                                                14/01/26  23:11:45  PAGE 3   
+
+  118          //-------------------------------------------------------------------------------------------------------
+             -------------
+  119          // 函数简介     角度归一化到-180~180度范围
+  120          // 参数说明     angle           角度值
+  121          // 返回参数     float           归一化后的角度(-180~180)
+  122          // 使用示例     float angle = angle_normalize(angle);
+  123          // 备注信息     将角度归一化到-180~180度范围
+  124          //-------------------------------------------------------------------------------------------------------
+             -------------
+  125          float angle_normalize(float angle)
+  126          {
+  127   1          while(angle > 180.0f)
+  128   1              angle -= 360.0f;
+  129   1          while(angle < -180.0f)
+  130   1              angle += 360.0f;
+  131   1          return angle;
+  132   1      }
+  133          
+  134          //-------------------------------------------------------------------------------------------------------
+             -------------
+  135          // 函数简介     IMU初始化
+  136          // 参数说明     void
+  137          // 返回参数     uint8           0-初始化成功 1-初始化失败
+  138          // 使用示例     uint8 result = imu_init();
+  139          // 备注信息     内部调用imu660rb_init()
+  140          //-------------------------------------------------------------------------------------------------------
+             -------------
+  141          uint8 imu_init(void)
+  142          {
+  143   1          uint8 result;
+  144   1      
+  145   1          // 初始化imu660rb
+  146   1          result = imu660rb_init();
+  147   1      
+  148   1          if(result == 0)
+  149   1          {
+  150   2              // 获取初始数据用于四元数初始化
+  151   2              system_delay_ms(50);
+  152   2              imu_get_data();
+  153   2      
+  154   2              // 使用加速度计初始值初始化四元数
+  155   2              imu_quaternion_init();
+  156   2          }
+  157   1      
+  158   1          return result;
+  159   1      }
+  160          
+  161          //-------------------------------------------------------------------------------------------------------
+             -------------
+  162          // 函数简介     获取IMU原始数据
+  163          // 参数说明     void
+  164          // 返回参数     void
+  165          // 使用示例     imu_get_data();
+  166          // 备注信息     从imu660rb获取加速度计和陀螺仪数据并转换为物理单位
+  167          //-------------------------------------------------------------------------------------------------------
+             -------------
+  168          void imu_get_data(void)
+  169          {
+  170   1          // 获取原始数据
+  171   1          imu660rb_get_acc();
+  172   1          imu660rb_get_gyro();
+  173   1      
+  174   1          // 转换为物理单位
+  175   1          imu.acc_x = imu660rb_acc_transition(imu660rb_acc_x);
+  176   1          imu.acc_y = imu660rb_acc_transition(imu660rb_acc_y);
+  177   1          imu.acc_z = imu660rb_acc_transition(imu660rb_acc_z);
+C251 COMPILER V5.60.0,  IMU                                                                14/01/26  23:11:45  PAGE 4   
+
+  178   1      
+  179   1          imu.gyro_x = imu660rb_gyro_transition(imu660rb_gyro_x);
+  180   1          imu.gyro_y = imu660rb_gyro_transition(imu660rb_gyro_y);
+  181   1          imu.gyro_z = imu660rb_gyro_transition(imu660rb_gyro_z);
+  182   1      }
+  183          
+  184          //-------------------------------------------------------------------------------------------------------
+             -------------
+  185          // 函数简介     四元数初始化
+  186          // 参数说明     void
+  187          // 返回参数     void
+  188          // 使用示例     imu_quaternion_init();
+  189          // 备注信息     使用加速度计初始值初始化四元数
+  190          //-------------------------------------------------------------------------------------------------------
+             -------------
+  191          void imu_quaternion_init(void)
+  192          {
+  193   1          float norm;
+  194   1          float halfvx, halfvy, halfvz;
+  195   1      
+  196   1          // 归一化加速度计向量
+  197   1          norm = fast_inv_sqrt(imu.acc_x * imu.acc_x + imu.acc_y * imu.acc_y + imu.acc_z * imu.acc_z);
+  198   1          imu.acc_x *= norm;
+  199   1          imu.acc_y *= norm;
+  200   1          imu.acc_z *= norm;
+  201   1      
+  202   1          // 初始化四元数，假设设备水平静止
+  203   1          // 使用加速度计数据初始化pitch和roll
+  204   1          halfvx = imu.acc_x;
+  205   1          halfvy = imu.acc_y;
+  206   1          halfvz = imu.acc_z;
+  207   1      
+  208   1          // 计算初始四元数
+  209   1          if(halfvz >= 0.0f)
+  210   1          {
+  211   2              imu.quat.q0 = fast_inv_sqrt(2.0f * (1.0f + halfvz));
+  212   2              imu.quat.q3 = 0.5f * imu.quat.q0;
+  213   2              imu.quat.q1 = -halfvy * imu.quat.q3;
+  214   2              imu.quat.q2 = halfvx * imu.quat.q3;
+  215   2          }
+  216   1          else
+  217   1          {
+  218   2              imu.quat.q3 = fast_inv_sqrt(2.0f * (1.0f - halfvz));
+  219   2              imu.quat.q0 = 0.5f * imu.quat.q3;
+  220   2              imu.quat.q1 = halfvy * imu.quat.q0;
+  221   2              imu.quat.q2 = -halfvx * imu.quat.q0;
+  222   2          }
+  223   1      }
+  224          
+  225          //-------------------------------------------------------------------------------------------------------
+             -------------
+  226          // 函数简介     四元数更新(互补滤波算法)
+  227          // 参数说明     void
+  228          // 返回参数     void
+  229          // 使用示例     imu_quaternion_update();
+  230          // 备注信息     使用互补滤波算法融合加速度计和陀螺仪数据更新四元数
+  231          //-------------------------------------------------------------------------------------------------------
+             -------------
+  232          void imu_quaternion_update(void)
+  233          {
+  234   1          float norm;
+  235   1          float vx, vy, vz;
+  236   1          float ex, ey, ez;
+  237   1          float q0_last, q1_last, q2_last, q3_last;
+  238   1          float gx_rad, gy_rad, gz_rad;
+  239   1      
+C251 COMPILER V5.60.0,  IMU                                                                14/01/26  23:11:45  PAGE 5   
+
+  240   1          // 归一化加速度计测量值
+  241   1          norm = fast_inv_sqrt(imu.acc_x * imu.acc_x + imu.acc_y * imu.acc_y + imu.acc_z * imu.acc_z);
+  242   1          imu.acc_x *= norm;
+  243   1          imu.acc_y *= norm;
+  244   1          imu.acc_z *= norm;
+  245   1      
+  246   1          // 估计重力方向
+  247   1          vx = 2.0f * (imu.quat.q1 * imu.quat.q3 - imu.quat.q0 * imu.quat.q2);
+  248   1          vy = 2.0f * (imu.quat.q0 * imu.quat.q1 + imu.quat.q2 * imu.quat.q3);
+  249   1          vz = imu.quat.q0 * imu.quat.q0 - imu.quat.q1 * imu.quat.q1 - imu.quat.q2 * imu.quat.q2 + imu.quat.q3 
+             -* imu.quat.q3;
+  250   1      
+  251   1          // 计算误差
+  252   1          ex = (imu.acc_y * vz - imu.acc_z * vy);
+  253   1          ey = (imu.acc_z * vx - imu.acc_x * vz);
+  254   1          ez = (imu.acc_x * vy - imu.acc_y * vx);
+  255   1      
+  256   1          // 积累误差
+  257   1          ex_int += ex * COMP_FILTER_Ki;
+  258   1          ey_int += ey * COMP_FILTER_Ki;
+  259   1          ez_int += ez * COMP_FILTER_Ki;
+  260   1      
+  261   1          // 调整后的陀螺仪数据
+  262   1          imu.gyro_x += COMP_FILTER_Kp * ex + ex_int;
+  263   1          imu.gyro_y += COMP_FILTER_Kp * ey + ey_int;
+  264   1          imu.gyro_z += COMP_FILTER_Kp * ez + ez_int;
+  265   1      
+  266   1          // 将角速度转换为弧度/s
+  267   1          gx_rad = imu.gyro_x * 0.0174533f;  // deg/s to rad/s
+  268   1          gy_rad = imu.gyro_y * 0.0174533f;
+  269   1          gz_rad = imu.gyro_z * 0.0174533f;
+  270   1      
+  271   1          // 保存当前四元数
+  272   1          q0_last = imu.quat.q0;
+  273   1          q1_last = imu.quat.q1;
+  274   1          q2_last = imu.quat.q2;
+  275   1          q3_last = imu.quat.q3;
+  276   1      
+  277   1          // 四元数微分方程
+  278   1          imu.quat.q0 += (-q1_last * gx_rad - q2_last * gy_rad - q3_last * gz_rad) * DT * 0.5f;
+  279   1          imu.quat.q1 += ( q0_last * gx_rad + q2_last * gz_rad - q3_last * gy_rad) * DT * 0.5f;
+  280   1          imu.quat.q2 += ( q0_last * gy_rad - q1_last * gz_rad + q3_last * gx_rad) * DT * 0.5f;
+  281   1          imu.quat.q3 += ( q0_last * gz_rad + q1_last * gy_rad - q2_last * gx_rad) * DT * 0.5f;
+  282   1      
+  283   1          // 归一化四元数
+  284   1          norm = fast_inv_sqrt(imu.quat.q0 * imu.quat.q0 + imu.quat.q1 * imu.quat.q1 +
+  285   1                               imu.quat.q2 * imu.quat.q2 + imu.quat.q3 * imu.quat.q3);
+  286   1          imu.quat.q0 *= norm;
+  287   1          imu.quat.q1 *= norm;
+  288   1          imu.quat.q2 *= norm;
+  289   1          imu.quat.q3 *= norm;
+  290   1      }
+  291          
+  292          //-------------------------------------------------------------------------------------------------------
+             -------------
+  293          // 函数简介     四元数转欧拉角
+  294          // 参数说明     void
+  295          // 返回参数     void
+  296          // 使用示例     imu_quaternion_to_euler();
+  297          // 备注信息     将四元数转换为欧拉角(roll,pitch,yaw)
+  298          //-------------------------------------------------------------------------------------------------------
+             -------------
+  299          void imu_quaternion_to_euler(void)
+  300          {
+  301   1          float q0, q1, q2, q3;
+  302   1      
+C251 COMPILER V5.60.0,  IMU                                                                14/01/26  23:11:45  PAGE 6   
+
+  303   1          q0 = imu.quat.q0;
+  304   1          q1 = imu.quat.q1;
+  305   1          q2 = imu.quat.q2;
+  306   1          q3 = imu.quat.q3;
+  307   1      
+  308   1          // 计算roll (横滚角)
+  309   1          imu.euler.roll = my_atan2(2.0f * (q0 * q1 + q2 * q3), 1.0f - 2.0f * (q1 * q1 + q2 * q2)) * 57.29578f;
+  310   1      
+  311   1          // 计算pitch (俯仰角)
+  312   1          imu.euler.pitch = my_asin(2.0f * (q0 * q2 - q1 * q3)) * 57.29578f;
+  313   1      
+  314   1          // 计算yaw (偏航角)
+  315   1          imu.euler.yaw = my_atan2(2.0f * (q0 * q3 + q1 * q2), 1.0f - 2.0f * (q2 * q2 + q3 * q3)) * 57.29578f;
+  316   1      
+  317   1          // 归一化角度到-180~180度范围
+  318   1          imu.euler.roll = angle_normalize(imu.euler.roll);
+  319   1          imu.euler.pitch = angle_normalize(imu.euler.pitch);
+  320   1          imu.euler.yaw = angle_normalize(imu.euler.yaw);
+  321   1      }
+  322          
+  323          //-------------------------------------------------------------------------------------------------------
+             -------------
+  324          // 函数简介     IMU数据更新
+  325          // 参数说明     void
+  326          // 返回参数     void
+  327          // 使用示例     imu_update();
+  328          // 备注信息     获取原始数据并进行四元数解算，需要周期调用(建议10ms)
+  329          //-------------------------------------------------------------------------------------------------------
+             -------------
+  330          void imu_update(void)
+  331          {
+  332   1          // 获取IMU原始数据
+  333   1          imu_get_data();
+  334   1      
+  335   1          // 更新四元数
+  336   1          imu_quaternion_update();
+  337   1      
+  338   1          // 转换为欧拉角
+  339   1          imu_quaternion_to_euler();
+  340   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =      3229     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =        64         48
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        27     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
