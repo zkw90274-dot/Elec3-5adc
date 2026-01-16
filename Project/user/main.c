@@ -34,6 +34,9 @@
 ********************************************************************************************************************/
 
 #include "zf_common_headfile.h"
+#include "../code/adc.h"
+#include "../code/normalization.h"
+#include "../code/encoder.h"
 
 
 #define PIT_CH_1                          (TIM1_PIT)                 // 使用的周期中断编号 如果修改 需要同步对应修改周期中断编号与 isr.c 中的调用
@@ -93,6 +96,19 @@ void main()
     while(1)
     {
         // 此处编写需要循环执行的代码
+
+        // 获取ADC值 (使用组合滤波 - 抗干扰最强)
+        Adc_Getval_Combined();
+        Normalization();
+
+        // 打印归一化后的ADC值
+        printf("ADC: %d,%d,%d,%d,%d\r\n",
+               adc_normalized_list[0],
+               adc_normalized_list[1],
+               adc_normalized_list[2],
+               adc_normalized_list[3],
+               adc_normalized_list[4]);
+
         // 打印编码器数据
         printf("Encoder: R=%d, L=%d\r\n", encoder_data_dir_R, encoder_data_dir_L);
 

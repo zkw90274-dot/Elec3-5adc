@@ -1,4 +1,3 @@
-// 头文件包含
 #include "key.h"
 
 // 全局变量定义
@@ -16,7 +15,6 @@ void key_init(void)
     gpio_init(IO_P32, GPI, 1, GPI_PULL_UP);
     gpio_init(IO_P33, GPI, 1, GPI_PULL_UP);
     gpio_init(IO_P36, GPI, 1, GPI_PULL_UP);
-
     gpio_init(IO_P50, GPI, 1, GPI_PULL_UP);
     gpio_init(IO_P51, GPI, 1, GPI_PULL_UP);
     gpio_init(IO_P37, GPI, 1, GPI_PULL_UP);
@@ -47,8 +45,6 @@ uint8 Key_Scan(void)
 // 返回参数     void
 // 使用示例     Key_Disp();
 // 备注信息     检测按键按下和释放事件，更新按键状态
-//              key_down: 按键按下标志
-//              key_up:   按键释放标志
 //-------------------------------------------------------------------------------------------------------------------
 void Key_Disp(void)
 {
@@ -57,33 +53,10 @@ void Key_Disp(void)
     key_up = ~key_val & (key_val ^ key_old);
     key_old = key_val;
 
-    if(key_down == 1)
-    {
-        lcd_cnt++;
-    }
-
-    if(key_down == 2)
-    {
-        lcd_cnt++;
-    }
-
-    if(key_down == 3)
-    {
-        lcd_cnt++;
-    }
-
-    if(key_down == 4)
-    {
-        lcd_cnt++;
-    }
-
-    if(key_down == 5)
-    {
-        lcd_cnt++;
-    }
-
-    if(key_down == 6)
-    {
-        lcd_cnt++;
-    }
+    if(key_down == 1) lcd_cnt++;
+    if(key_down == 2) lcd_cnt++;
+    if(key_down == 3) lcd_cnt++;
+    if(key_down == 4) lcd_cnt++;
+    if(key_down == 5) lcd_cnt++;
+    if(key_down == 6) lcd_cnt++;
 }
