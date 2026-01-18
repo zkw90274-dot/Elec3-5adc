@@ -109,5 +109,6 @@
 #include "normalization.h"
 #include "control.h"
 #include "IMU.h"
+#include "task.h"
 #endif
 

@@ -56,8 +56,9 @@ float iir_lowpass(float new_val, float last_val, float alpha)
 void Encoder_Get_Filtered(void)
 {
     float temp_L, temp_R;
-    float alpha = 0.2f;
+    float alpha;
 
+    alpha = 0.2f;
     temp_L = (float)encoder_get_count(ENCODER_DIR_L);
     temp_R = (float)encoder_get_count(ENCODER_DIR_R);
 

@@ -37,6 +37,9 @@
 #include "../code/adc.h"
 #include "../code/normalization.h"
 #include "../code/encoder.h"
+#include "../code/IMU.h"
+#include "../code/pid.h"
+#include "../code/task.h"
 
 
 #define PIT_CH_1                          (TIM1_PIT)                 // 使用的周期中断编号 如果修改 需要同步对应修改周期中断编号与 isr.c 中的调用
@@ -71,13 +74,19 @@ void main()
         printf("IMU init failed!\r\n");
     }
 
-	//差比和差系数初始化
-//	SDSD_init(&SDSD,1.0,1.0,1.0);
+    // ========== 控制器初始化 (根据 task.h 中的 CONTROL_MODE_CURRENT 选择模式) ==========
 
-// PID初始化 (Kp, Ki, Kd 参数需要根据实际情况调试)
-//    pid_init(&pid_motor_left,1.7, 0.22, 0.2);      	    // 左电机PID参数
-//    pid_init(&pid_motor_right, 1.7, 0.1, 0.0);     		// 右电机PID参数
-//	pid_init(&pid_SDSD,1.0,0,0);								//SDSD的PID参数
+    // SDSD初始化 (用于 SDSD 控制模式)
+    SDSD_init(&SDSD, 1.0f, 1.0f, 1.0f);
+    pid_init(&pid_SDSD, 2.0f, 0.0f, 0.5f);    // SDSD的PID参数: Kp=2.0, Ki=0, Kd=0.5
+
+    // 电机速度环PID初始化 (两种模式都需要)
+    pid_init(&pid_motor_left, 1.7f, 0.22f, 0.2f);     // 左电机PID参数
+    pid_init(&pid_motor_right, 1.7f, 0.1f, 0.0f);     // 右电机PID参数
+
+    // PD方向环+角速度环初始化 (用于 PD方向环控制模式)
+    // Kp=2.5, Kd=0.8 (方向环) | Kp_gyro=1.2, Kd_gyro=0.3 (角速度环)
+    pd_init(&pd_direction, 2.5f, 0.8f, 1.2f, 0.3f);
 
 // 设置目标速度 (单位: 编码器计数值每5ms)
 //    pid_set_target(&pid_motor_left, left_target);            	// 左电机目标速度
@@ -97,8 +106,8 @@ void main()
     {
         // 此处编写需要循环执行的代码
 
-        // 获取ADC值 (使用组合滤波 - 抗干扰最强)
-        Adc_Getval_Combined();
+        // 获取ADC值 (使用快速去极值平均滤波 - 推荐)
+        Adc_Getval_Fast();
         Normalization();
 
         // 打印归一化后的ADC值
@@ -125,20 +134,13 @@ void main()
 // 参数说明     void
 // 返回参数     void
 // 使用示例     pit_handler();
+// 备注信息     10ms周期中断，处理编码器采集和电机控制
 //-------------------------------------------------------------------------------------------------------------------
 void pit_handler_1 (void)
 {
-    // 获取编码器计数
-    encoder_data_dir_R = encoder_get_count(ENCODER_DIR_R);
-    encoder_data_dir_L = encoder_get_count(ENCODER_DIR_L);
-
-
-	motor_pid_control(encoder_data_dir_L, encoder_data_dir_R);
-    // 清空编码器计数
-    encoder_clear_count(ENCODER_DIR_R);
-    encoder_clear_count(ENCODER_DIR_L);
-
-
+    // 调用电机控制任务 (封装在task.c中)
+    // 功能: 编码器采集 -> ADC判断 -> PD控制 -> 电机输出
+    motor_control_task();
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -146,10 +148,11 @@ void pit_handler_1 (void)
 // 参数说明     void
 // 返回参数     void
 // 使用示例     pit_handler();
+// 备注信息     50ms周期中断，更新IMU数据
 //-------------------------------------------------------------------------------------------------------------------
 void pit_handler_2 (void)
 {
-	imu_update();
-
-
+    // 调用IMU更新任务 (封装在task.c中)
+    // 功能: 获取IMU原始数据 -> 四元数解算 -> 欧拉角更新
+    imu_update_task();
 }

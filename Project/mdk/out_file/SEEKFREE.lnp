@@ -48,6 +48,7 @@
 ".\out_file\normalization.obj",
 ".\out_file\control.obj",
 ".\out_file\IMU.obj",
+".\out_file\task.obj",
 ".\out_file\isr.obj",
 ".\out_file\main.obj" 
 TO ".\out_file\SEEKFREE" 

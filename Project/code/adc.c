@@ -151,21 +151,41 @@ void Adc_Getval_Avg(void)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
-// 函数简介     获取所有ADC值 - 组合滤波版本 (推荐)
+// 函数简介     获取所有ADC值 - 快速去极值平均滤波 (推荐)
 // 参数说明     void
 // 返回参数     void
-// 使用示例     Adc_Getval_Combined();
-// 备注信息     使用中值+去极值组合滤波获取ADC值并限幅
-//              双重滤波，最强的抗干扰能力，适合强干扰环境
+// 使用示例     Adc_Getval_Fast();
+// 备注信息     使用去极值平均滤波获取ADC值并限幅
+//              每通道11次采样，去掉最大最小后取平均
+//              总时间约27ms，适合实时控制
 //              结果保存在 adc_val_list[] 数组中
 //-------------------------------------------------------------------------------------------------------------------
-void Adc_Getval_Combined(void)
+void Adc_Getval_Fast(void)
 {
     for(channel_index = 0; channel_index < CHANNEL_NUMBER; channel_index++)
     {
-        // 组合滤波 -> 限幅
         adc_val_list[channel_index] = limit(
-            adc_sample_b(channel_list[channel_index]),
+            adc_sample(channel_list[channel_index]),
+            channel_index
+        );
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     获取所有ADC值 - 中值滤波版本
+// 参数说明     void
+// 返回参数     void
+// 使用示例     Adc_Getval_Mid();
+// 备注信息     使用中值滤波获取ADC值并限幅
+//              每通道3次采样取中值，总时间约7ms，最快
+//              结果保存在 adc_val_list[] 数组中
+//-------------------------------------------------------------------------------------------------------------------
+void Adc_Getval_Quick(void)
+{
+    for(channel_index = 0; channel_index < CHANNEL_NUMBER; channel_index++)
+    {
+        adc_val_list[channel_index] = limit(
+            adc_mid_sample(channel_list[channel_index]),
             channel_index
         );
     }

@@ -37,7 +37,8 @@ void Adc_Test(void);                                        // ADC测试函数
 void Adc_Getval(void);                                      // 获取ADC值 - 简单平均滤波
 void Adc_Getval_Mid(void);                                  // 获取ADC值 - 中值滤波
 void Adc_Getval_Avg(void);                                  // 获取ADC值 - 去极值平均滤波
-void Adc_Getval_Combined(void);                             // 获取ADC值 - 组合滤波(推荐)
+void Adc_Getval_Fast(void);                                 // 获取ADC值 - 快速去极值平均(推荐)
+void Adc_Getval_Quick(void);                                // 获取ADC值 - 快速中值(最快)
 uint16 limit(uint16 adc_val, uint8 index);                   // ADC值限幅函数
 
 //-------------------------------------------------------------------------------------------------------------------

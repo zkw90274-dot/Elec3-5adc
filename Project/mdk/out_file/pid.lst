@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  pid                                                                14/01/26  23:11:44  PAGE 1   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE pid
@@ -9,299 +9,481 @@ COMPILER INVOKED BY: E:\Tools\keil5\Keil_v5\C251\BIN\C251.EXE ..\code\pid.c LARG
 
 stmt  level    source
 
-    1          //头文件包含
-    2          #include "pid.h"
-    3          #include "control.h"
-    4          
-    5          
-    6          // 全局变量定义
-    7          pid_param_t pid_motor_left;     // 左电机PID控制器
-    8          pid_param_t pid_motor_right;    // 右电机PID控制器
-    9          pid_param_t pid_SDSD;           // 差比和差PID控制器
-   10          
-   11          //-------------------------------------------------------------------------------------------------------
+    1          #include "pid.h"
+    2          
+    3          // 全局变量定义
+    4          pid_param_t pid_motor_left;     // 左电机PID控制器
+    5          pid_param_t pid_motor_right;    // 右电机PID控制器
+    6          pid_param_t pid_SDSD;           // 差比和差PID控制器
+    7          
+    8          // PD控制器全局变量
+    9          pd_param_t pd_direction;        // 方向环PD参数
+   10          pd_param_t pd_angle;            // 角度环PD参数
+   11          pd_param_t pd_gyro;             // 角速度环PD参数
+   12          
+   13          //-------------------------------------------------------------------------------------------------------
              -------------
-   12          // 函数简介     PID参数初始化
-   13          // 参数说明     pid             PID结构体指针
-   14          // 参数说明     kp              比例系数
-   15          // 参数说明     ki              积分系数
-   16          // 参数说明     kd              微分系数
-   17          // 返回参数     void
-   18          // 使用示例     pid_init(&pid_motor_left, 1.7, 0.22, 0.2);
-   19          // 备注信息     初始化PID控制器的所有参数和状态变量
-   20          //-------------------------------------------------------------------------------------------------------
+   14          // 函数简介     PID参数初始化
+   15          // 参数说明     pid             PID结构体指针
+   16          // 参数说明     kp              比例系数
+   17          // 参数说明     ki              积分系数
+   18          // 参数说明     kd              微分系数
+   19          // 返回参数     void
+   20          // 使用示例     pid_init(&pid_motor_left, 1.7, 0.22, 0.2);
+   21          //-------------------------------------------------------------------------------------------------------
              -------------
-   21          void pid_init(pid_param_t *pid, float kp, float ki, float kd)
-   22          {
-   23   1          pid->kp = kp;
-   24   1          pid->ki = ki;
-   25   1          pid->kd = kd;
-   26   1      
+   22          void pid_init(pid_param_t *pid, float kp, float ki, float kd)
+   23          {
+   24   1          pid->kp = kp;
+   25   1          pid->ki = ki;
+   26   1          pid->kd = kd;
    27   1          pid->target = 0;
    28   1          pid->actual = 0;
    29   1          pid->error = 0;
    30   1          pid->last_error = 0;
    31   1          pid->prev_error = 0;
-   32   1      
-   33   1          pid->out_p = 0;
-   34   1          pid->out_i = 0;
-   35   1          pid->out_d = 0;
-   36   1          pid->out = 0;
-   37   1      
-   38   1          pid->integrator = 0;
-   39   1          pid->integral_max = PID_INTEGRAL_MAX;
-   40   1          pid->output_max = PID_OUTPUT_MAX;
-   41   1          pid->output_min = PID_OUTPUT_MIN;
-   42   1      }
-   43          
-   44          //-------------------------------------------------------------------------------------------------------
+   32   1          pid->out_p = 0;
+   33   1          pid->out_i = 0;
+   34   1          pid->out_d = 0;
+   35   1          pid->out = 0;
+   36   1          pid->integrator = 0;
+   37   1          pid->integral_max = PID_INTEGRAL_MAX;
+   38   1          pid->output_max = PID_OUTPUT_MAX;
+   39   1          pid->output_min = PID_OUTPUT_MIN;
+   40   1      }
+   41          
+   42          //-------------------------------------------------------------------------------------------------------
              -------------
-   45          // 函数简介     设置PID参数
-   46          // 参数说明     pid             PID结构体指针
-   47          // 参数说明     kp              比例系数
-   48          // 参数说明     ki              积分系数
-   49          // 参数说明     kd              微分系数
-   50          // 返回参数     void
-   51          // 使用示例     pid_set_param(&pid_motor_left, 2.0, 0.3, 0.25);
-   52          // 备注信息     动态调整PID参数，不影响其他状态变量
-   53          //-------------------------------------------------------------------------------------------------------
+   43          // 函数简介     设置PID参数
+   44          // 参数说明     pid             PID结构体指针
+   45          // 参数说明     kp              比例系数
+   46          // 参数说明     ki              积分系数
+   47          // 参数说明     kd              微分系数
+   48          // 返回参数     void
+   49          // 使用示例     pid_set_param(&pid_motor_left, 2.0, 0.3, 0.25);
+   50          //-------------------------------------------------------------------------------------------------------
              -------------
-C251 COMPILER V5.60.0,  pid                                                                14/01/26  23:11:44  PAGE 2   
+   51          void pid_set_param(pid_param_t *pid, float kp, float ki, float kd)
+   52          {
+   53   1          pid->kp = kp;
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 2   
 
-   54          void pid_set_param(pid_param_t *pid, float kp, float ki, float kd)
-   55          {
-   56   1          pid->kp = kp;
-   57   1          pid->ki = ki;
-   58   1          pid->kd = kd;
-   59   1      }
-   60          
-   61          //-------------------------------------------------------------------------------------------------------
+   54   1          pid->ki = ki;
+   55   1          pid->kd = kd;
+   56   1      }
+   57          
+   58          //-------------------------------------------------------------------------------------------------------
              -------------
-   62          // 函数简介     设置PID目标值
-   63          // 参数说明     pid             PID结构体指针
-   64          // 参数说明     target          目标值
-   65          // 返回参数     void
-   66          // 使用示例     pid_set_target(&pid_motor_left, 100);
-   67          // 备注信息     设置PID控制器的目标值(注：函数内部对target取负)
-   68          //-------------------------------------------------------------------------------------------------------
+   59          // 函数简介     设置PID目标值
+   60          // 参数说明     pid             PID结构体指针
+   61          // 参数说明     target          目标值
+   62          // 返回参数     void
+   63          // 使用示例     pid_set_target(&pid_motor_left, 100);
+   64          //-------------------------------------------------------------------------------------------------------
              -------------
-   69          void pid_set_target(pid_param_t *pid, float target)
-   70          {
-   71   1          pid->target = -target;
-   72   1      }
-   73          
-   74          //-------------------------------------------------------------------------------------------------------
+   65          void pid_set_target(pid_param_t *pid, float target)
+   66          {
+   67   1          pid->target = -target;
+   68   1      }
+   69          
+   70          //-------------------------------------------------------------------------------------------------------
              -------------
-   75          // 函数简介     清除PID数据
-   76          // 参数说明     pid             PID结构体指针
-   77          // 返回参数     void
-   78          // 使用示例     pid_clear(&pid_motor_left);
-   79          // 备注信息     清除PID的所有误差和输出累计值，用于重启控制或切换模式
-   80          //-------------------------------------------------------------------------------------------------------
+   71          // 函数简介     清除PID数据
+   72          // 参数说明     pid             PID结构体指针
+   73          // 返回参数     void
+   74          // 使用示例     pid_clear(&pid_motor_left);
+   75          //-------------------------------------------------------------------------------------------------------
              -------------
-   81          void pid_clear(pid_param_t *pid)
-   82          {
-   83   1          pid->error = 0;
-   84   1          pid->last_error = 0;
-   85   1          pid->prev_error = 0;
-   86   1          pid->integrator = 0;
-   87   1          pid->out = 0;
-   88   1          pid->out_p = 0;
-   89   1          pid->out_i = 0;
-   90   1          pid->out_d = 0;
-   91   1      }
-   92          
-   93          //-------------------------------------------------------------------------------------------------------
+   76          void pid_clear(pid_param_t *pid)
+   77          {
+   78   1          pid->error = 0;
+   79   1          pid->last_error = 0;
+   80   1          pid->prev_error = 0;
+   81   1          pid->integrator = 0;
+   82   1          pid->out = 0;
+   83   1          pid->out_p = 0;
+   84   1          pid->out_i = 0;
+   85   1          pid->out_d = 0;
+   86   1      }
+   87          
+   88          //-------------------------------------------------------------------------------------------------------
              -------------
-   94          // 函数简介     限幅函数
-   95          // 参数说明     value           待限幅值
-   96          // 参数说明     min_val         最小值
-   97          // 参数说明     max_val         最大值
-   98          // 返回参数     float           限幅后的值
-   99          // 使用示例     float result = constrain_float(value, -100, 100);
-  100          // 备注信息     将输入值限制在指定范围内
-  101          //-------------------------------------------------------------------------------------------------------
+   89          // 函数简介     限幅函数
+   90          // 参数说明     value           待限幅值
+   91          // 参数说明     min_val         最小值
+   92          // 参数说明     max_val         最大值
+   93          // 返回参数     float           限幅后的值
+   94          //-------------------------------------------------------------------------------------------------------
              -------------
-  102          float constrain_float(float value, float min_val, float max_val)
-  103          {
-  104   1          if(value <= min_val)
-  105   1              return min_val;
-  106   1          else if(value >= max_val)
-  107   1              return max_val;
-  108   1          else
-  109   1              return value;
-  110   1      }
-  111          
-  112          //-------------------------------------------------------------------------------------------------------
+   95          float constrain_float(float value, float min_val, float max_val)
+   96          {
+   97   1          if(value <= min_val)
+   98   1              return min_val;
+   99   1          else if(value >= max_val)
+  100   1              return max_val;
+  101   1          else
+  102   1              return value;
+  103   1      }
+  104          
+  105          //-------------------------------------------------------------------------------------------------------
              -------------
-C251 COMPILER V5.60.0,  pid                                                                14/01/26  23:11:44  PAGE 3   
+  106          // 函数简介     位置式PID计算
+  107          // 参数说明     pid             PID结构体指针
+  108          // 参数说明     actual          当前实际值
+  109          // 返回参数     float           PID输出值
+  110          //-------------------------------------------------------------------------------------------------------
+             -------------
+  111          float pid_calc_position(pid_param_t *pid, float actual)
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 3   
 
-  113          // 函数简介     位置式PID计算
-  114          // 参数说明     pid             PID结构体指针
-  115          // 参数说明     actual          当前实际值
-  116          // 返回参数     float           PID输出值
-  117          // 使用示例     float output = pid_calc_position(&pid_motor_left, encoder_value);
-  118          // 备注信息     位置式PID，输出是绝对控制量
-  119          //-------------------------------------------------------------------------------------------------------
+  112          {
+  113   1          pid->actual = actual;
+  114   1          pid->error = pid->target - actual;
+  115   1          pid->integrator += pid->error;
+  116   1          pid->integrator = constrain_float(pid->integrator, -pid->integral_max, pid->integral_max);
+  117   1          pid->out_p = pid->kp * pid->error;
+  118   1          pid->out_i = pid->ki * pid->integrator;
+  119   1          pid->out_d = pid->kd * (pid->error - pid->last_error);
+  120   1          pid->last_error = pid->error;
+  121   1          pid->out = pid->out_p + pid->out_i + pid->out_d;
+  122   1          pid->out = constrain_float(pid->out, pid->output_min, pid->output_max);
+  123   1          return pid->out;
+  124   1      }
+  125          
+  126          //-------------------------------------------------------------------------------------------------------
              -------------
-  120          float pid_calc_position(pid_param_t *pid, float actual)
-  121          {
-  122   1          pid->actual = actual;
-  123   1          pid->error = pid->target - actual;
-  124   1      
-  125   1          // 积分累计
-  126   1          pid->integrator += pid->error;
-  127   1      
-  128   1          // 积分限幅
-  129   1          pid->integrator = constrain_float(pid->integrator, -pid->integral_max, pid->integral_max);
-  130   1      
-  131   1          // 计算PID各项
-  132   1          pid->out_p = pid->kp * pid->error;
-  133   1          pid->out_i = pid->ki * pid->integrator;
-  134   1          pid->out_d = pid->kd * (pid->error - pid->last_error);
-  135   1      
-  136   1          // 更新误差
-  137   1          pid->last_error = pid->error;
-  138   1      
-  139   1          // 计算总输出
-  140   1          pid->out = pid->out_p + pid->out_i + pid->out_d;
-  141   1      
-  142   1          // 输出限幅
-  143   1          pid->out = constrain_float(pid->out, pid->output_min, pid->output_max);
-  144   1      
+  127          // 函数简介     增量式PID计算
+  128          // 参数说明     pid             PID结构体指针
+  129          // 参数说明     actual          当前实际值
+  130          // 返回参数     float           PID输出值
+  131          //-------------------------------------------------------------------------------------------------------
+             -------------
+  132          float pid_calc_increment(pid_param_t *pid, float actual)
+  133          {
+  134   1          float increment;
+  135   1          pid->actual = actual;
+  136   1          pid->error = pid->target - actual;
+  137   1          pid->out_p = pid->kp * (pid->error - pid->last_error);
+  138   1          pid->out_i = pid->ki * pid->error;
+  139   1          pid->out_d = pid->kd * (pid->error - 2 * pid->last_error + pid->prev_error);
+  140   1          increment = pid->out_p + pid->out_i + pid->out_d;
+  141   1          pid->prev_error = pid->last_error;
+  142   1          pid->last_error = pid->error;
+  143   1          pid->out += increment;
+  144   1          pid->out = constrain_float(pid->out, pid->output_min, pid->output_max);
   145   1          return pid->out;
   146   1      }
   147          
   148          //-------------------------------------------------------------------------------------------------------
              -------------
-  149          // 函数简介     增量式PID计算
-  150          // 参数说明     pid             PID结构体指针
-  151          // 参数说明     actual          当前实际值
-  152          // 返回参数     float           PID输出值
-  153          // 使用示例     float output = pid_calc_increment(&pid_motor_left, encoder_value);
-  154          // 备注信息     增量式PID，输出是控制量的增量，需要累加到之前的输出
-  155          //-------------------------------------------------------------------------------------------------------
+  149          // 函数简介     电机PID控制函数
+  150          // 参数说明     encoder_left    左编码器值
+  151          // 参数说明     encoder_right   右编码器值
+  152          // 返回参数     void
+  153          // 使用示例     motor_pid_control(encoder_left, encoder_right);
+  154          //-------------------------------------------------------------------------------------------------------
              -------------
-  156          float pid_calc_increment(pid_param_t *pid, float actual)
-  157          {
-  158   1          float increment;
-  159   1      
-  160   1          pid->actual = actual;
-  161   1          pid->error = pid->target - actual;
-  162   1      
-  163   1          // 计算增量式PID各项
-  164   1          // Δu(k) = Kp[e(k)-e(k-1)] + Ki*e(k) + Kd[e(k)-2e(k-1)+e(k-2)]
-  165   1          pid->out_p = pid->kp * (pid->error - pid->last_error);
-  166   1          pid->out_i = pid->ki * pid->error;
-  167   1          pid->out_d = pid->kd * (pid->error - 2 * pid->last_error + pid->prev_error);
-  168   1      
-  169   1          // 计算增量
-  170   1          increment = pid->out_p + pid->out_i + pid->out_d;
-  171   1      
-  172   1          // 更新误差
-  173   1          pid->prev_error = pid->last_error;
-  174   1          pid->last_error = pid->error;
-  175   1      
-C251 COMPILER V5.60.0,  pid                                                                14/01/26  23:11:44  PAGE 4   
+  155          void motor_pid_control(int16 encoder_left, int16 encoder_right)
+  156          {
+  157   1          float input_SDSD;
+  158   1          float output_SDSD;
+  159   1          float final_input_left;
+  160   1          float final_input_right;
+  161   1          float output_left;
+  162   1          float output_right;
+  163   1          uint8 pwm_left;
+  164   1          uint8 pwm_right;
+  165   1      
+  166   1          // SDSD计算和PID控制
+  167   1          input_SDSD = SDSD_calculate(&SDSD);
+  168   1          output_SDSD = pid_calc_position(&pid_SDSD, input_SDSD);
+  169   1          final_input_left = encoder_left + output_SDSD;
+  170   1          final_input_right = encoder_right - output_SDSD;
+  171   1          output_left = pid_calc_increment(&pid_motor_left, final_input_left);
+  172   1          output_right = pid_calc_increment(&pid_motor_right, final_input_right);
+  173   1      
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 4   
 
-  176   1          // 累加输出
-  177   1          pid->out += increment;
-  178   1      
-  179   1          // 输出限幅
-  180   1          pid->out = constrain_float(pid->out, pid->output_min, pid->output_max);
-  181   1      
-  182   1          return pid->out;
-  183   1      }
-  184          
-  185          //-------------------------------------------------------------------------------------------------------
+  174   1          if(output_left >= 0)
+  175   1          {
+  176   2              pwm_left = (output_left > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_left;
+  177   2              Motor_LeftForward(pwm_left);
+  178   2          }
+  179   1          else
+  180   1          {
+  181   2              pwm_left = ((-output_left) > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)(-output_left);
+  182   2              Motor_LeftBackward(pwm_left);
+  183   2          }
+  184   1      
+  185   1          if(output_right >= 0)
+  186   1          {
+  187   2              pwm_right = (output_right > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_right;
+  188   2              Motor_RightForward(pwm_right);
+  189   2          }
+  190   1          else
+  191   1          {
+  192   2              pwm_right = ((-output_right) > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)(-output_right);
+  193   2              Motor_RightBackward(pwm_right);
+  194   2          }
+  195   1      }
+  196          
+  197          //=======================================================================================================
+             -============
+  198          // PD控制器实现 - 角度环/角速度环/方向环
+  199          //=======================================================================================================
+             -============
+  200          
+  201          //-------------------------------------------------------------------------------------------------------
              -------------
-  186          // 函数简介     电机PID控制函数
-  187          // 参数说明     encoder_left    左编码器值
-  188          // 参数说明     encoder_right   右编码器值
-  189          // 返回参数     void
-  190          // 使用示例     motor_pid_control(encoder_left, encoder_right);
-  191          // 备注信息     在定时中断中调用，根据编码器值计算PWM输出并控制电机
-  192          //              首先使用差比和差进行位置式PID计算，然后使用增量式PID控制电机�
-             -�度
-  193          //-------------------------------------------------------------------------------------------------------
+  202          // 函数简介     PD控制器参数初始化
+  203          // 参数说明     pd              PD结构体指针
+  204          // 参数说明     kp              比例系数
+  205          // 参数说明     kd              微分系数
+  206          // 参数说明     kp_gyro         角速度环比例系数
+  207          // 参数说明     kd_gyro         角速度环微分系数
+  208          // 返回参数     void
+  209          // 使用示例     pd_init(&pd_direction, 2.5, 0.8, 1.2, 0.3);
+  210          //-------------------------------------------------------------------------------------------------------
              -------------
-  194          void motor_pid_control(int16 encoder_left, int16 encoder_right)
-  195          {
-  196   1          float output_left = 0;
-  197   1          float output_right = 0;
-  198   1          float input_SDSD = 0;
-  199   1          float output_SDSD = 0;
-  200   1          float final_input_left = 0;
-  201   1          float final_input_right = 0;
-  202   1      
-  203   1          uint8 pwm_left = 0;
-  204   1          uint8 pwm_right = 0;
-  205   1      
-  206   1          // 计算差比和差值
-  207   1          input_SDSD = SDSD_calculate(&SDSD);
-  208   1          output_SDSD = pid_calc_position(&pid_SDSD, input_SDSD);
-  209   1      
-  210   1          // 计算差速后的输入值
-  211   1          final_input_left = encoder_left + output_SDSD;
-  212   1          final_input_right = encoder_right - output_SDSD;
-  213   1      
-  214   1          // 计算增量式PID输出（已经融合了差速，-100~100限幅）
-  215   1          output_left = pid_calc_increment(&pid_motor_left, final_input_left);
-  216   1          output_right = pid_calc_increment(&pid_motor_right, final_input_right);
-  217   1      
-  218   1          // ===== 左电机控制（带限幅保护）=====
-  219   1          if(output_left >= 0)
-  220   1          {
-  221   2              pwm_left = (output_left > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_left;
-  222   2              Motor_LeftForward(pwm_left);
-  223   2          }
-  224   1          else
-  225   1          {
-  226   2              pwm_left = ((-output_left) > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)(-output_left);
-  227   2              Motor_LeftBackward(pwm_left);
-  228   2          }
-  229   1      
-  230   1          // ===== 右电机控制（带限幅保护）=====
-  231   1          if(output_right >= 0)
-  232   1          {
-  233   2              pwm_right = (output_right > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_right;
-  234   2              Motor_RightForward(pwm_right);
-  235   2          }
-  236   1          else
-  237   1          {
-  238   2              pwm_right = ((-output_right) > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)(-output_right);
-C251 COMPILER V5.60.0,  pid                                                                14/01/26  23:11:44  PAGE 5   
+  211          void pd_init(pd_param_t *pd, float kp, float kd, float kp_gyro, float kd_gyro)
+  212          {
+  213   1          pd->kp = kp;
+  214   1          pd->kd = kd;
+  215   1          pd->kp_gyro = kp_gyro;
+  216   1          pd->kd_gyro = kd_gyro;
+  217   1      }
+  218          
+  219          //-------------------------------------------------------------------------------------------------------
+             -------------
+  220          // 函数简介     PD方向环 - 电磁位置误差转期望角速度
+  221          // 参数说明     err_position    电磁位置误差
+  222          // 返回参数     float           电机差速修正值
+  223          // 使用示例     float correction = pd_direction_loop(adc_error);
+  224          // 备注信息     两级PD控制：位置误差->期望角速度->角速度误差->电机差速
+  225          //-------------------------------------------------------------------------------------------------------
+             -------------
+  226          float pd_direction_loop(float err_position)
+  227          {
+  228   1          static float err_position_history[4] = {0};
+  229   1          static float err_gyro_history[2] = {0};
+  230   1          float expect_gyro;
+  231   1          float err_gyro;
+  232   1          float correction;
+  233   1      
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 5   
 
-  239   2              Motor_RightBackward(pwm_right);
-  240   2          }
-  241   1      }
-*** WARNING C183 IN LINE 198 OF ..\code\pid.c: dead assignment eliminated
-*** WARNING C183 IN LINE 199 OF ..\code\pid.c: dead assignment eliminated
-*** WARNING C183 IN LINE 200 OF ..\code\pid.c: dead assignment eliminated
-*** WARNING C183 IN LINE 201 OF ..\code\pid.c: dead assignment eliminated
-*** WARNING C183 IN LINE 203 OF ..\code\pid.c: dead assignment eliminated
-*** WARNING C183 IN LINE 204 OF ..\code\pid.c: dead assignment eliminated
+  234   1          // 误差历史更新
+  235   1          err_position_history[2] = err_position_history[1];
+  236   1          err_position_history[1] = err_position_history[0];
+  237   1          err_position_history[0] = err_position;
+  238   1      
+  239   1          // 第一级PD：位置误差 -> 期望角速度
+  240   1          expect_gyro = pd_direction.kp * err_position_history[0] +
+  241   1                        pd_direction.kd * (err_position_history[0] - err_position_history[1]);
+  242   1      
+  243   1          // 角速度期望限幅
+  244   1          if(expect_gyro > 100.0f)
+  245   1              expect_gyro = 100.0f;
+  246   1          else if(expect_gyro < -100.0f)
+  247   1              expect_gyro = -100.0f;
+  248   1      
+  249   1          // 第二级PD：角速度误差 -> 电机差速修正值
+  250   1          err_gyro = expect_gyro - imu.gyro_z;
+  251   1          err_gyro_history[1] = err_gyro_history[0];
+  252   1          err_gyro_history[0] = err_gyro;
+  253   1      
+  254   1          correction = pd_direction.kp_gyro * err_gyro_history[0] +
+  255   1                       pd_direction.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]);
+  256   1      
+  257   1          // 输出限幅
+  258   1          if(correction > 100.0f)
+  259   1              correction = 100.0f;
+  260   1          else if(correction < -100.0f)
+  261   1              correction = -100.0f;
+  262   1      
+  263   1          return correction;
+  264   1      }
+  265          
+  266          //-------------------------------------------------------------------------------------------------------
+             -------------
+  267          // 函数简介     PD角度环 - 角度误差转期望角速度
+  268          // 参数说明     current_angle   当前角度(如yaw)
+  269          // 参数说明     target_angle    目标角度
+  270          // 返回参数     float           期望角速度
+  271          // 使用示例     float expect_gyro = pd_angle_loop(current_yaw, target_yaw);
+  272          // 备注信息     用于转弯控制：角度误差->PD计算->期望角速度
+  273          //-------------------------------------------------------------------------------------------------------
+             -------------
+  274          float pd_angle_loop(float current_angle, float target_angle)
+  275          {
+  276   1          static float err_angle_history[3] = {0};
+  277   1          float err_angle = 0;
+  278   1          float expect_gyro = 0;
+  279   1      
+  280   1          // 角度误差计算(处理角度跳变)
+  281   1          err_angle = target_angle - current_angle;
+  282   1          if(err_angle > 180.0f)
+  283   1              err_angle -= 360.0f;
+  284   1          else if(err_angle < -180.0f)
+  285   1              err_angle += 360.0f;
+  286   1      
+  287   1          // 误差历史更新
+  288   1          err_angle_history[2] = err_angle_history[1];
+  289   1          err_angle_history[1] = err_angle_history[0];
+  290   1          err_angle_history[0] = err_angle;
+  291   1      
+  292   1          // PD计算：角度误差 -> 期望角速度
+  293   1          expect_gyro = pd_angle.kp * err_angle_history[0] +
+  294   1                        pd_angle.kd * (err_angle_history[1] - err_angle_history[2]);
+  295   1      
+  296   1          // 输出限幅
+  297   1          if(expect_gyro > 100.0f)
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 6   
+
+  298   1              expect_gyro = 100.0f;
+  299   1          else if(expect_gyro < -100.0f)
+  300   1              expect_gyro = -100.0f;
+  301   1      
+  302   1          return expect_gyro;
+  303   1      }
+  304          
+  305          //-------------------------------------------------------------------------------------------------------
+             -------------
+  306          // 函数简介     PD角速度环 - 角速度误差转电机控制值
+  307          // 参数说明     expect_gyro     期望角速度
+  308          // 参数说明     actual_gyro     实际角速度
+  309          // 返回参数     int16           电机控制值
+  310          // 使用示例     int16 output = pd_gyro_loop(expect_gyro, actual_z_gyro);
+  311          // 备注信息     用于角速度闭环控制：角速度误差->PD计算->电机控制量
+  312          //-------------------------------------------------------------------------------------------------------
+             -------------
+  313          int16 pd_gyro_loop(float expect_gyro, float actual_gyro)
+  314          {
+  315   1          static float err_gyro_history[2] = {0};
+  316   1          float err_gyro = 0;
+  317   1          int16 output = 0;
+  318   1      
+  319   1          // 角速度误差计算
+  320   1          err_gyro = expect_gyro - actual_gyro;
+  321   1      
+  322   1          // 误差历史更新
+  323   1          err_gyro_history[1] = err_gyro_history[0];
+  324   1          err_gyro_history[0] = err_gyro;
+  325   1      
+  326   1          // PD计算：角速度误差 -> 电机控制值
+  327   1          output = (int16)(pd_gyro.kp_gyro * err_gyro_history[0] +
+  328   1                           pd_gyro.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]));
+  329   1      
+  330   1          // 输出限幅
+  331   1          if(output > 5000)
+  332   1              output = 5000;
+  333   1          else if(output < -5000)
+  334   1              output = -5000;
+  335   1      
+  336   1          return output;
+  337   1      }
+  338          
+  339          //-------------------------------------------------------------------------------------------------------
+             -------------
+  340          // 函数简介     PD方向环+角速度环组合控制 (推荐用于循迹)
+  341          // 参数说明     err_position    位置误差(ADC归一化值-中心值)
+  342          // 返回参数     float           电机差速修正值
+  343          // 使用示例     float correction = pd_direction_gyro_loop(adc_error);
+  344          // 备注信息     位置误差->期望角速度->角速度闭环->电机差速修正值
+  345          //              控制流程:
+  346          //              1. 位置误差经PD计算得到期望角速度
+  347          //              2. 期望角速度与实际角速度比较
+  348          //              3. 角速度误差经PD计算得到电机差速修正值
+  349          //              4. 双环结构提供快速响应和良好阻尼
+  350          //-------------------------------------------------------------------------------------------------------
+             -------------
+  351          float pd_direction_gyro_loop(float err_position)
+  352          {
+  353   1          static float err_position_history[4] = {0};
+  354   1          static float err_gyro_history[2] = {0};
+  355   1          float expect_gyro;
+  356   1          float err_gyro;
+  357   1          float correction;
+  358   1      
+  359   1          // ========== 第一级：PD方向环 ==========
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 7   
+
+  360   1          // 误差历史更新
+  361   1          err_position_history[2] = err_position_history[1];
+  362   1          err_position_history[1] = err_position_history[0];
+  363   1          err_position_history[0] = err_position;
+  364   1      
+  365   1          // PD计算：位置误差 -> 期望角速度
+  366   1          expect_gyro = pd_direction.kp * err_position_history[0] +
+  367   1                        pd_direction.kd * (err_position_history[0] - err_position_history[1]);
+  368   1      
+  369   1          // 期望角速度限幅 (防止响应过激)
+  370   1          if(expect_gyro > 100.0f)
+  371   1              expect_gyro = 100.0f;
+  372   1          else if(expect_gyro < -100.0f)
+  373   1              expect_gyro = -100.0f;
+  374   1      
+  375   1          // ========== 第二级：PD角速度环 ==========
+  376   1          // 角速度误差计算
+  377   1          err_gyro = expect_gyro - imu.gyro_z;
+  378   1      
+  379   1          // 误差历史更新
+  380   1          err_gyro_history[1] = err_gyro_history[0];
+  381   1          err_gyro_history[0] = err_gyro;
+  382   1      
+  383   1          // PD计算：角速度误差 -> 电机差速修正值
+  384   1          correction = pd_direction.kp_gyro * err_gyro_history[0] +
+  385   1                       pd_direction.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]);
+  386   1      
+  387   1          // 输出限幅 (根据实际需要调整)
+  388   1          if(correction > 100.0f)
+  389   1              correction = 100.0f;
+  390   1          else if(correction < -100.0f)
+  391   1              correction = -100.0f;
+  392   1      
+  393   1          return correction;
+  394   1      }
+  395          
+  396          //-------------------------------------------------------------------------------------------------------
+             -------------
+  397          // 函数简介     清除PD控制器历史误差
+  398          // 参数说明     void
+  399          // 返回参数     void
+  400          // 使用示例     pd_clear_history();
+  401          // 备注信息     清除所有PD控制器的误差历史，用于重启控制或切换模式
+  402          //              注意：此函数仅清除误差历史，不清除PD参数
+  403          //-------------------------------------------------------------------------------------------------------
+             -------------
+  404          void pd_clear_history(void)
+  405          {
+  406   1          // 注意：静态变量无法在外部直接清零
+  407   1          // 这是一个示例函数，实际使用时需要在各PD函数内部添加清除逻辑
+  408   1          // 或者重启控制器来清除历史误差
+  409   1      }
+*** WARNING C183 IN LINE 316 OF ..\code\pid.c: dead assignment eliminated
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =      1252     ------
+  code size            =      2146     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =       192         30
+  xdata size           =       308         38
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------
   ebit size            =    ------     ------
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 8   
+
   bitaddressable size  =    ------     ------
   ebitaddressable size =    ------     ------
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =    ------     ------
+  hconst size          =        98     ------
 End of Module Information.
 
 
-C251 COMPILATION COMPLETE.  6 WARNING(S),  0 ERROR(S)
+C251 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
