@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 1   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE pid
@@ -66,7 +66,7 @@ stmt  level    source
    51          void pid_set_param(pid_param_t *pid, float kp, float ki, float kd)
    52          {
    53   1          pid->kp = kp;
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 2   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 2   
 
    54   1          pid->ki = ki;
    55   1          pid->kd = kd;
@@ -134,7 +134,7 @@ stmt  level    source
   110          //-------------------------------------------------------------------------------------------------------
              -------------
   111          float pid_calc_position(pid_param_t *pid, float actual)
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 3   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 3   
 
   112          {
   113   1          pid->actual = actual;
@@ -202,7 +202,7 @@ stmt  level    source
   171   1          output_left = pid_calc_increment(&pid_motor_left, final_input_left);
   172   1          output_right = pid_calc_increment(&pid_motor_right, final_input_right);
   173   1      
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 4   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 4   
 
   174   1          if(output_left >= 0)
   175   1          {
@@ -270,7 +270,7 @@ stmt  level    source
   231   1          float err_gyro;
   232   1          float correction;
   233   1      
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 5   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 5   
 
   234   1          // 误差历史更新
   235   1          err_position_history[2] = err_position_history[1];
@@ -338,7 +338,7 @@ stmt  level    source
   295   1      
   296   1          // 输出限幅
   297   1          if(expect_gyro > 100.0f)
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 6   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 6   
 
   298   1              expect_gyro = 100.0f;
   299   1          else if(expect_gyro < -100.0f)
@@ -406,7 +406,7 @@ stmt  level    source
   357   1          float correction;
   358   1      
   359   1          // ========== 第一级：PD方向环 ==========
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 7   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 7   
 
   360   1          // 误差历史更新
   361   1          err_position_history[2] = err_position_history[1];
@@ -475,7 +475,7 @@ Module Information          Static   Overlayable
   edata size           =    ------     ------
   bit size             =    ------     ------
   ebit size            =    ------     ------
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:08:41  PAGE 8   
+C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 8   
 
   bitaddressable size  =    ------     ------
   ebitaddressable size =    ------     ------

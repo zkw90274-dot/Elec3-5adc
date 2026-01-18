@@ -1,6 +1,11 @@
 #include "task.h"
 
 //-------------------------------------------------------------------------------------------------------------------
+// 全局变量
+//-------------------------------------------------------------------------------------------------------------------
+static uint8 current_control_mode = CONTROL_MODE_PID_ONLY;  // 当前控制模式
+
+//-------------------------------------------------------------------------------------------------------------------
 // 函数简介     检查ADC传感器有效性
 // 参数说明     void
 // 返回参数     uint8           1-传感器有效 0-传感器无效
@@ -48,6 +53,20 @@ float position_error_calc(void)
     error = (float)adc_normalized_list[2] - 25.0f;
 
     return error;
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     纯PID速度环控制(无循迹)
+// 参数说明     void
+// 返回参数     float           电机差速修正值(始终为0)
+// 使用示例     float correction = pid_only_control();
+// 备注信息     仅使用电机速度环PID，无循迹功能
+//              用于测试电机速度环是否正常工作
+//-------------------------------------------------------------------------------------------------------------------
+float pid_only_control(void)
+{
+    // 纯PID模式，无循迹修正
+    return 0.0f;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -118,33 +137,86 @@ float pd_control_with_sensor_check(void)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
+// 函数简介     获取当前控制模式
+// 参数说明     void
+// 返回参数     uint8           当前控制模式
+// 使用示例     uint8 mode = get_control_mode();
+// 备注信息     返回当前控制模式编号
+//-------------------------------------------------------------------------------------------------------------------
+uint8 get_control_mode(void)
+{
+    #if(CONTROL_SELECT_METHOD == CONTROL_SELECT_METHOD_STATIC)
+        return CONTROL_MODE_CURRENT;
+    #else
+        return current_control_mode;
+    #endif
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数简介     获取控制模式名称
+// 参数说明     mode            控制模式编号
+// 返回参数     char*           模式名称字符串
+// 使用示例     printf("当前模式: %s\r\n", get_mode_name(get_control_mode()));
+// 备注信息     返回控制模式的中文名称
+//-------------------------------------------------------------------------------------------------------------------
+char* get_mode_name(uint8 mode)
+{
+    switch(mode)
+    {
+        case CONTROL_MODE_PID_ONLY:
+            return "纯PID速度环";
+        case CONTROL_MODE_SDSD:
+            return "SDSD循迹";
+        case CONTROL_MODE_PD_DIRECTION:
+            return "PD方向环+角速度环";
+        default:
+            return "未知模式";
+    }
+}
+
+//-------------------------------------------------------------------------------------------------------------------
 // 函数简介     电机控制任务(10ms周期调用)
 // 参数说明     void
 // 返回参数     void
 // 使用示例     motor_control_task();
 // 备注信息     在10ms定时中断中调用，完成编码器采集和电机控制
 //              功能: 编码器采集 -> 控制算法选择 -> 电机输出
-//              控制模式由 CONTROL_MODE_CURRENT 宏定义决定
+//              控制模式由 task.h 中的 CONTROL_MODE_CURRENT 决定
 //-------------------------------------------------------------------------------------------------------------------
 void motor_control_task(void)
 {
     float correction;
+    uint8 mode;
 
     // 使用滤波后的编码器获取函数 (一阶IIR低通滤波)
     Encoder_Get_Filtered();
 
+    // 获取当前控制模式
+    mode = get_control_mode();
+
     // 根据控制模式选择不同的控制算法
-#if(CONTROL_MODE_CURRENT == CONTROL_MODE_SDSD)
-    // 模式0: SDSD控制
-    correction = sdsd_control_with_sensor_check();
+    switch(mode)
+    {
+        case CONTROL_MODE_PID_ONLY:
+            // 模式0: 纯PID速度环控制(无循迹)
+            correction = pid_only_control();
+            break;
 
-#elif(CONTROL_MODE_CURRENT == CONTROL_MODE_PD_DIRECTION)
-    // 模式1: PD方向环+角速度环控制
-    correction = pd_control_with_sensor_check();
+        case CONTROL_MODE_SDSD:
+            // 模式1: SDSD控制
+            correction = sdsd_control_with_sensor_check();
+            break;
 
-#else
-    #error "未定义的控制模式，请在 task.h 中设置 CONTROL_MODE_CURRENT"
-#endif
+        case CONTROL_MODE_PD_DIRECTION:
+            // 模式2: PD方向环+角速度环控制
+            correction = pd_control_with_sensor_check();
+            break;
+
+        default:
+            // 默认: 纯PID模式
+            correction = pid_only_control();
+            break;
+    }
 
     // 电机PID控制 (修正值叠加到编码器输入)
     motor_pid_control(encoder_data_dir_L + correction, encoder_data_dir_R - correction);

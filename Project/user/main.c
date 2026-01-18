@@ -79,21 +79,20 @@ void main()
     // SDSD初始化 (用于 SDSD 控制模式)
     SDSD_init(&SDSD, 1.0f, 1.0f, 1.0f);
     pid_init(&pid_SDSD, 2.0f, 0.0f, 0.5f);    // SDSD的PID参数: Kp=2.0, Ki=0, Kd=0.5
+    pid_set_target(&pid_SDSD, 0);             // SDSD期望偏差为0(居中)
 
     // 电机速度环PID初始化 (两种模式都需要)
     pid_init(&pid_motor_left, 1.7f, 0.22f, 0.2f);     // 左电机PID参数
     pid_init(&pid_motor_right, 1.7f, 0.1f, 0.0f);     // 右电机PID参数
 
+    // 设置目标速度 (单位: 编码器计数值每10ms)
+    // 根据实际测试调整，建议从20-50开始
+    pid_set_target(&pid_motor_left, 30.0f);    // 左电机目标速度
+    pid_set_target(&pid_motor_right, 30.0f);   // 右电机目标速度
+
     // PD方向环+角速度环初始化 (用于 PD方向环控制模式)
     // Kp=2.5, Kd=0.8 (方向环) | Kp_gyro=1.2, Kd_gyro=0.3 (角速度环)
     pd_init(&pd_direction, 2.5f, 0.8f, 1.2f, 0.3f);
-
-// 设置目标速度 (单位: 编码器计数值每5ms)
-//    pid_set_target(&pid_motor_left, left_target);            	// 左电机目标速度
-//    pid_set_target(&pid_motor_right, right_target);           // 右电机目标速度
-//
-//	//设置预期差值
-//	pid_set_target(&pid_SDSD,0);
 
 // 此处编写用户代码 例如外设初始化代码等
     tim1_irq_handler = pit_handler_1;					  	//重写tim0中断处理函数
@@ -110,8 +109,9 @@ void main()
         Adc_Getval_Fast();
         Normalization();
 
-        // 打印归一化后的ADC值
-        printf("ADC: %d,%d,%d,%d,%d\r\n",
+        // 打印当前控制模式和传感器数据
+        printf("模式: %s | ADC: %d,%d,%d,%d,%d\r\n",
+               get_mode_name(get_control_mode()),
                adc_normalized_list[0],
                adc_normalized_list[1],
                adc_normalized_list[2],
