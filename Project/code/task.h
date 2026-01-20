@@ -22,7 +22,7 @@
 #define CONTROL_SELECT_METHOD_AUTO     2       // 自动切换: 定时自动切换
 
 // 当前使用的模式选择方式
-#define CONTROL_SELECT_METHOD          CONTROL_SELECT_STATIC  // 静态模式
+#define CONTROL_SELECT_METHOD          CONTROL_SELECT_METHOD_STATIC  // 静态模式
 
 // ========== 静态模式选择 (编译时固定) ==========
 #if(CONTROL_SELECT_METHOD == CONTROL_SELECT_METHOD_STATIC)

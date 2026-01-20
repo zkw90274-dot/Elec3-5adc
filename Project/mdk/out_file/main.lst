@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               18/01/26  23:59:59  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               21/01/26  02:20:57  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -66,7 +66,7 @@ stmt  level    source
    47          
    48          void pit_handler_1(void);
    49          void pit_handler_2(void);
-C251 COMPILER V5.60.0,  main                                                               18/01/26  23:59:59  PAGE 2   
+C251 COMPILER V5.60.0,  main                                                               21/01/26  02:20:57  PAGE 2   
 
    50          
    51          float left_target = 0;                    //左轮目标值
@@ -100,41 +100,41 @@ stmt  level    source
    79   1          // SDSD初始化 (用于 SDSD 控制模式)
    80   1          SDSD_init(&SDSD, 1.0f, 1.0f, 1.0f);
    81   1          pid_init(&pid_SDSD, 2.0f, 0.0f, 0.5f);    // SDSD的PID参数: Kp=2.0, Ki=0, Kd=0.5
-   82   1      
-   83   1          // 电机速度环PID初始化 (两种模式都需要)
-   84   1          pid_init(&pid_motor_left, 1.7f, 0.22f, 0.2f);     // 左电机PID参数
-   85   1          pid_init(&pid_motor_right, 1.7f, 0.1f, 0.0f);     // 右电机PID参数
-   86   1      
-   87   1          // PD方向环+角速度环初始化 (用于 PD方向环控制模式)
-   88   1          // Kp=2.5, Kd=0.8 (方向环) | Kp_gyro=1.2, Kd_gyro=0.3 (角速度环)
-   89   1          pd_init(&pd_direction, 2.5f, 0.8f, 1.2f, 0.3f);
-   90   1      
-   91   1      // 设置目标速度 (单位: 编码器计数值每5ms)
-   92   1      //    pid_set_target(&pid_motor_left, left_target);             // 左电机目标速度
-   93   1      //    pid_set_target(&pid_motor_right, right_target);           // 右电机目标速度
-   94   1      //
-   95   1      //  //设置预期差值
-   96   1      //  pid_set_target(&pid_SDSD,0);
-   97   1      
-   98   1      // 此处编写用户代码 例如外设初始化代码等
-   99   1          tim1_irq_handler = pit_handler_1;             //重写tim0中断处理函数
-  100   1          tim2_irq_handler = pit_handler_2;             //重写tim0中断处理函数
-  101   1      
-  102   1          pit_ms_init(PIT_CH_1,10);                   // 初始化 PIT 为周期中断 10ms 周期
-  103   1          pit_ms_init(PIT_CH_2,50);                   // 初始化 PIT 为周期中断 10ms 周期
-  104   1      
-  105   1          while(1)
-  106   1          {
-  107   2              // 此处编写需要循环执行的代码
-  108   2      
-  109   2              // 获取ADC值 (使用快速去极值平均滤波 - 推荐)
-  110   2              Adc_Getval_Fast();
-  111   2              Normalization();
-  112   2      
-  113   2              // 打印归一化后的ADC值
-  114   2              printf("ADC: %d,%d,%d,%d,%d\r\n",
+   82   1          pid_set_target(&pid_SDSD, 0);             // SDSD期望偏差为0(居中)
+   83   1      
+   84   1          // 电机速度环PID初始化 (两种模式都需要)
+   85   1          pid_init(&pid_motor_left, 1.7f, 0.22f, 0.2f);     // 左电机PID参数
+   86   1          pid_init(&pid_motor_right, 1.7f, 0.1f, 0.0f);     // 右电机PID参数
+   87   1      
+   88   1          // 设置目标速度 (单位: 编码器计数值每10ms)
+   89   1          // 根据实际测试调整，建议从20-50开始
+   90   1          pid_set_target(&pid_motor_left, 30.0f);    // 左电机目标速度
+   91   1          pid_set_target(&pid_motor_right, 30.0f);   // 右电机目标速度
+   92   1      
+   93   1          // PD方向环+角速度环初始化 (用于 PD方向环控制模式)
+   94   1          // Kp=2.5, Kd=0.8 (方向环) | Kp_gyro=1.2, Kd_gyro=0.3 (角速度环)
+   95   1          pd_init(&pd_direction, 2.5f, 0.8f, 1.2f, 0.3f);
+   96   1      
+   97   1      // 此处编写用户代码 例如外设初始化代码等
+   98   1          tim1_irq_handler = pit_handler_1;             //重写tim0中断处理函数
+   99   1          tim2_irq_handler = pit_handler_2;             //重写tim0中断处理函数
+  100   1      
+  101   1          pit_ms_init(PIT_CH_1,10);                   // 初始化 PIT 为周期中断 10ms 周期
+  102   1          pit_ms_init(PIT_CH_2,50);                   // 初始化 PIT 为周期中断 10ms 周期
+  103   1      
+  104   1          while(1)
+  105   1          {
+  106   2              // 此处编写需要循环执行的代码
+  107   2      
+  108   2              // 获取ADC值 (使用快速去极值平均滤波 - 推荐)
+  109   2              Adc_Getval_Fast();
+  110   2              Normalization();
+  111   2      
+  112   2              // 打印当前控制模式和传感器数据
+  113   2              printf("模式: %s | ADC: %d,%d,%d,%d,%d\r\n",
+  114   2                     get_mode_name(get_control_mode()),
   115   2                     adc_normalized_list[0],
-C251 COMPILER V5.60.0,  main                                                               18/01/26  23:59:59  PAGE 3   
+C251 COMPILER V5.60.0,  main                                                               21/01/26  02:20:57  PAGE 3   
 
   116   2                     adc_normalized_list[1],
   117   2                     adc_normalized_list[2],
@@ -189,7 +189,7 @@ stmt  level    source
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =       637     ------
+  code size            =       700     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
@@ -203,10 +203,10 @@ Module Information          Static   Overlayable
   ebitaddressable size =    ------     ------
   far data size        =    ------     ------
   huge data size       =    ------     ------
-C251 COMPILER V5.60.0,  main                                                               18/01/26  23:59:59  PAGE 4   
+C251 COMPILER V5.60.0,  main                                                               21/01/26  02:20:57  PAGE 4   
 
   const size           =    ------     ------
-  hconst size          =       148     ------
+  hconst size          =       161     ------
 End of Module Information.
 
 

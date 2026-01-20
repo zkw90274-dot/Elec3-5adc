@@ -839,6 +839,11 @@
               <FileType>1</FileType>
               <FilePath>..\user\main.c</FilePath>
             </File>
+            <File>
+              <FileName>测试指南.md</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\user\测试指南.md</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

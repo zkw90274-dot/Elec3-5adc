@@ -147,30 +147,25 @@ float pid_calc_increment(pid_param_t *pid, float actual)
 
 //-------------------------------------------------------------------------------------------------------------------
 // 函数简介     电机PID控制函数
-// 参数说明     encoder_left    左编码器值
-// 参数说明     encoder_right   右编码器值
+// 参数说明     encoder_left    左编码器值（已叠加差速修正）
+// 参数说明     encoder_right   右编码器值（已叠加差速修正）
 // 返回参数     void
 // 使用示例     motor_pid_control(encoder_left, encoder_right);
+// 备注信息     双电机速度环闭环控制，使用增量式PID
+//              注意：差速修正在 motor_control_task() 中完成，此函数仅处理速度环
 //-------------------------------------------------------------------------------------------------------------------
 void motor_pid_control(int16 encoder_left, int16 encoder_right)
 {
-    float input_SDSD;
-    float output_SDSD;
-    float final_input_left;
-    float final_input_right;
     float output_left;
     float output_right;
     uint8 pwm_left;
     uint8 pwm_right;
 
-    // SDSD计算和PID控制
-    input_SDSD = SDSD_calculate(&SDSD);
-    output_SDSD = pid_calc_position(&pid_SDSD, input_SDSD);
-    final_input_left = encoder_left + output_SDSD;
-    final_input_right = encoder_right - output_SDSD;
-    output_left = pid_calc_increment(&pid_motor_left, final_input_left);
-    output_right = pid_calc_increment(&pid_motor_right, final_input_right);
+    // 增量式PID速度环计算
+    output_left = pid_calc_increment(&pid_motor_left, encoder_left);
+    output_right = pid_calc_increment(&pid_motor_right, encoder_right);
 
+    // 左电机PWM输出（带方向控制）
     if(output_left >= 0)
     {
         pwm_left = (output_left > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_left;
@@ -182,6 +177,7 @@ void motor_pid_control(int16 encoder_left, int16 encoder_right)
         Motor_LeftBackward(pwm_left);
     }
 
+    // 右电机PWM输出（带方向控制）
     if(output_right >= 0)
     {
         pwm_right = (output_right > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_right;

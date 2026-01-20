@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  IMU                                                                18/01/26  23:59:59  PAGE 1   
+C251 COMPILER V5.60.0,  IMU                                                                21/01/26  02:20:57  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE IMU
@@ -66,7 +66,7 @@ stmt  level    source
    53   1          return result;
    54   1      }
    55          
-C251 COMPILER V5.60.0,  IMU                                                                18/01/26  23:59:59  PAGE 2   
+C251 COMPILER V5.60.0,  IMU                                                                21/01/26  02:20:57  PAGE 2   
 
    56          //-------------------------------------------------------------------------------------------------------
              -------------
@@ -134,7 +134,7 @@ stmt  level    source
   115   1          return y;
   116   1      }
   117          
-C251 COMPILER V5.60.0,  IMU                                                                18/01/26  23:59:59  PAGE 3   
+C251 COMPILER V5.60.0,  IMU                                                                21/01/26  02:20:57  PAGE 3   
 
   118          //-------------------------------------------------------------------------------------------------------
              -------------
@@ -202,7 +202,7 @@ stmt  level    source
   175   1          imu.acc_x = imu660rb_acc_transition(imu660rb_acc_x);
   176   1          imu.acc_y = imu660rb_acc_transition(imu660rb_acc_y);
   177   1          imu.acc_z = imu660rb_acc_transition(imu660rb_acc_z);
-C251 COMPILER V5.60.0,  IMU                                                                18/01/26  23:59:59  PAGE 4   
+C251 COMPILER V5.60.0,  IMU                                                                21/01/26  02:20:57  PAGE 4   
 
   178   1      
   179   1          imu.gyro_x = imu660rb_gyro_transition(imu660rb_gyro_x);
@@ -270,7 +270,7 @@ stmt  level    source
   237   1          float q0_last, q1_last, q2_last, q3_last;
   238   1          float gx_rad, gy_rad, gz_rad;
   239   1      
-C251 COMPILER V5.60.0,  IMU                                                                18/01/26  23:59:59  PAGE 5   
+C251 COMPILER V5.60.0,  IMU                                                                21/01/26  02:20:57  PAGE 5   
 
   240   1          // 归一化加速度计测量值
   241   1          norm = fast_inv_sqrt(imu.acc_x * imu.acc_x + imu.acc_y * imu.acc_y + imu.acc_z * imu.acc_z);
@@ -338,7 +338,7 @@ stmt  level    source
   300          {
   301   1          float q0, q1, q2, q3;
   302   1      
-C251 COMPILER V5.60.0,  IMU                                                                18/01/26  23:59:59  PAGE 6   
+C251 COMPILER V5.60.0,  IMU                                                                21/01/26  02:20:57  PAGE 6   
 
   303   1          q0 = imu.quat.q0;
   304   1          q1 = imu.quat.q1;

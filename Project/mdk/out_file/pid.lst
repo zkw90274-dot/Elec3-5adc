@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 1   
+C251 COMPILER V5.60.0,  pid                                                                21/01/26  02:20:57  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE pid
@@ -66,7 +66,7 @@ stmt  level    source
    51          void pid_set_param(pid_param_t *pid, float kp, float ki, float kd)
    52          {
    53   1          pid->kp = kp;
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 2   
+C251 COMPILER V5.60.0,  pid                                                                21/01/26  02:20:57  PAGE 2   
 
    54   1          pid->ki = ki;
    55   1          pid->kd = kd;
@@ -134,7 +134,7 @@ stmt  level    source
   110          //-------------------------------------------------------------------------------------------------------
              -------------
   111          float pid_calc_position(pid_param_t *pid, float actual)
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 3   
+C251 COMPILER V5.60.0,  pid                                                                21/01/26  02:20:57  PAGE 3   
 
   112          {
   113   1          pid->actual = actual;
@@ -177,295 +177,291 @@ stmt  level    source
   148          //-------------------------------------------------------------------------------------------------------
              -------------
   149          // 函数简介     电机PID控制函数
-  150          // 参数说明     encoder_left    左编码器值
-  151          // 参数说明     encoder_right   右编码器值
+  150          // 参数说明     encoder_left    左编码器值（已叠加差速修正）
+  151          // 参数说明     encoder_right   右编码器值（已叠加差速修正）
   152          // 返回参数     void
   153          // 使用示例     motor_pid_control(encoder_left, encoder_right);
-  154          //-------------------------------------------------------------------------------------------------------
+  154          // 备注信息     双电机速度环闭环控制，使用增量式PID
+  155          //              注意：差速修正在 motor_control_task() 中完成，此函数仅处理速度环
+  156          //-------------------------------------------------------------------------------------------------------
              -------------
-  155          void motor_pid_control(int16 encoder_left, int16 encoder_right)
-  156          {
-  157   1          float input_SDSD;
-  158   1          float output_SDSD;
-  159   1          float final_input_left;
-  160   1          float final_input_right;
-  161   1          float output_left;
-  162   1          float output_right;
-  163   1          uint8 pwm_left;
-  164   1          uint8 pwm_right;
-  165   1      
-  166   1          // SDSD计算和PID控制
-  167   1          input_SDSD = SDSD_calculate(&SDSD);
-  168   1          output_SDSD = pid_calc_position(&pid_SDSD, input_SDSD);
-  169   1          final_input_left = encoder_left + output_SDSD;
-  170   1          final_input_right = encoder_right - output_SDSD;
-  171   1          output_left = pid_calc_increment(&pid_motor_left, final_input_left);
-  172   1          output_right = pid_calc_increment(&pid_motor_right, final_input_right);
-  173   1      
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 4   
+  157          void motor_pid_control(int16 encoder_left, int16 encoder_right)
+  158          {
+  159   1          float output_left;
+  160   1          float output_right;
+  161   1          uint8 pwm_left;
+  162   1          uint8 pwm_right;
+  163   1      
+  164   1          // 增量式PID速度环计算
+  165   1          output_left = pid_calc_increment(&pid_motor_left, encoder_left);
+  166   1          output_right = pid_calc_increment(&pid_motor_right, encoder_right);
+  167   1      
+  168   1          // 左电机PWM输出（带方向控制）
+  169   1          if(output_left >= 0)
+  170   1          {
+  171   2              pwm_left = (output_left > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_left;
+  172   2              Motor_LeftForward(pwm_left);
+  173   2          }
+C251 COMPILER V5.60.0,  pid                                                                21/01/26  02:20:57  PAGE 4   
 
-  174   1          if(output_left >= 0)
+  174   1          else
   175   1          {
-  176   2              pwm_left = (output_left > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_left;
-  177   2              Motor_LeftForward(pwm_left);
+  176   2              pwm_left = ((-output_left) > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)(-output_left);
+  177   2              Motor_LeftBackward(pwm_left);
   178   2          }
-  179   1          else
-  180   1          {
-  181   2              pwm_left = ((-output_left) > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)(-output_left);
-  182   2              Motor_LeftBackward(pwm_left);
-  183   2          }
-  184   1      
-  185   1          if(output_right >= 0)
-  186   1          {
-  187   2              pwm_right = (output_right > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_right;
-  188   2              Motor_RightForward(pwm_right);
-  189   2          }
-  190   1          else
-  191   1          {
-  192   2              pwm_right = ((-output_right) > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)(-output_right);
-  193   2              Motor_RightBackward(pwm_right);
-  194   2          }
-  195   1      }
+  179   1      
+  180   1          // 右电机PWM输出（带方向控制）
+  181   1          if(output_right >= 0)
+  182   1          {
+  183   2              pwm_right = (output_right > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)output_right;
+  184   2              Motor_RightForward(pwm_right);
+  185   2          }
+  186   1          else
+  187   1          {
+  188   2              pwm_right = ((-output_right) > PID_OUTPUT_MAX) ? PID_OUTPUT_MAX : (uint8)(-output_right);
+  189   2              Motor_RightBackward(pwm_right);
+  190   2          }
+  191   1      }
+  192          
+  193          //=======================================================================================================
+             -============
+  194          // PD控制器实现 - 角度环/角速度环/方向环
+  195          //=======================================================================================================
+             -============
   196          
-  197          //=======================================================================================================
-             -============
-  198          // PD控制器实现 - 角度环/角速度环/方向环
-  199          //=======================================================================================================
-             -============
-  200          
-  201          //-------------------------------------------------------------------------------------------------------
+  197          //-------------------------------------------------------------------------------------------------------
              -------------
-  202          // 函数简介     PD控制器参数初始化
-  203          // 参数说明     pd              PD结构体指针
-  204          // 参数说明     kp              比例系数
-  205          // 参数说明     kd              微分系数
-  206          // 参数说明     kp_gyro         角速度环比例系数
-  207          // 参数说明     kd_gyro         角速度环微分系数
-  208          // 返回参数     void
-  209          // 使用示例     pd_init(&pd_direction, 2.5, 0.8, 1.2, 0.3);
-  210          //-------------------------------------------------------------------------------------------------------
+  198          // 函数简介     PD控制器参数初始化
+  199          // 参数说明     pd              PD结构体指针
+  200          // 参数说明     kp              比例系数
+  201          // 参数说明     kd              微分系数
+  202          // 参数说明     kp_gyro         角速度环比例系数
+  203          // 参数说明     kd_gyro         角速度环微分系数
+  204          // 返回参数     void
+  205          // 使用示例     pd_init(&pd_direction, 2.5, 0.8, 1.2, 0.3);
+  206          //-------------------------------------------------------------------------------------------------------
              -------------
-  211          void pd_init(pd_param_t *pd, float kp, float kd, float kp_gyro, float kd_gyro)
-  212          {
-  213   1          pd->kp = kp;
-  214   1          pd->kd = kd;
-  215   1          pd->kp_gyro = kp_gyro;
-  216   1          pd->kd_gyro = kd_gyro;
-  217   1      }
-  218          
-  219          //-------------------------------------------------------------------------------------------------------
+  207          void pd_init(pd_param_t *pd, float kp, float kd, float kp_gyro, float kd_gyro)
+  208          {
+  209   1          pd->kp = kp;
+  210   1          pd->kd = kd;
+  211   1          pd->kp_gyro = kp_gyro;
+  212   1          pd->kd_gyro = kd_gyro;
+  213   1      }
+  214          
+  215          //-------------------------------------------------------------------------------------------------------
              -------------
-  220          // 函数简介     PD方向环 - 电磁位置误差转期望角速度
-  221          // 参数说明     err_position    电磁位置误差
-  222          // 返回参数     float           电机差速修正值
-  223          // 使用示例     float correction = pd_direction_loop(adc_error);
-  224          // 备注信息     两级PD控制：位置误差->期望角速度->角速度误差->电机差速
-  225          //-------------------------------------------------------------------------------------------------------
+  216          // 函数简介     PD方向环 - 电磁位置误差转期望角速度
+  217          // 参数说明     err_position    电磁位置误差
+  218          // 返回参数     float           电机差速修正值
+  219          // 使用示例     float correction = pd_direction_loop(adc_error);
+  220          // 备注信息     两级PD控制：位置误差->期望角速度->角速度误差->电机差速
+  221          //-------------------------------------------------------------------------------------------------------
              -------------
-  226          float pd_direction_loop(float err_position)
-  227          {
-  228   1          static float err_position_history[4] = {0};
-  229   1          static float err_gyro_history[2] = {0};
-  230   1          float expect_gyro;
-  231   1          float err_gyro;
-  232   1          float correction;
-  233   1      
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 5   
+  222          float pd_direction_loop(float err_position)
+  223          {
+  224   1          static float err_position_history[4] = {0};
+  225   1          static float err_gyro_history[2] = {0};
+  226   1          float expect_gyro;
+  227   1          float err_gyro;
+  228   1          float correction;
+  229   1      
+  230   1          // 误差历史更新
+  231   1          err_position_history[2] = err_position_history[1];
+  232   1          err_position_history[1] = err_position_history[0];
+  233   1          err_position_history[0] = err_position;
+C251 COMPILER V5.60.0,  pid                                                                21/01/26  02:20:57  PAGE 5   
 
-  234   1          // 误差历史更新
-  235   1          err_position_history[2] = err_position_history[1];
-  236   1          err_position_history[1] = err_position_history[0];
-  237   1          err_position_history[0] = err_position;
+  234   1      
+  235   1          // 第一级PD：位置误差 -> 期望角速度
+  236   1          expect_gyro = pd_direction.kp * err_position_history[0] +
+  237   1                        pd_direction.kd * (err_position_history[0] - err_position_history[1]);
   238   1      
-  239   1          // 第一级PD：位置误差 -> 期望角速度
-  240   1          expect_gyro = pd_direction.kp * err_position_history[0] +
-  241   1                        pd_direction.kd * (err_position_history[0] - err_position_history[1]);
-  242   1      
-  243   1          // 角速度期望限幅
-  244   1          if(expect_gyro > 100.0f)
-  245   1              expect_gyro = 100.0f;
-  246   1          else if(expect_gyro < -100.0f)
-  247   1              expect_gyro = -100.0f;
-  248   1      
-  249   1          // 第二级PD：角速度误差 -> 电机差速修正值
-  250   1          err_gyro = expect_gyro - imu.gyro_z;
-  251   1          err_gyro_history[1] = err_gyro_history[0];
-  252   1          err_gyro_history[0] = err_gyro;
-  253   1      
-  254   1          correction = pd_direction.kp_gyro * err_gyro_history[0] +
-  255   1                       pd_direction.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]);
-  256   1      
-  257   1          // 输出限幅
-  258   1          if(correction > 100.0f)
-  259   1              correction = 100.0f;
-  260   1          else if(correction < -100.0f)
-  261   1              correction = -100.0f;
-  262   1      
-  263   1          return correction;
-  264   1      }
-  265          
-  266          //-------------------------------------------------------------------------------------------------------
+  239   1          // 角速度期望限幅
+  240   1          if(expect_gyro > 100.0f)
+  241   1              expect_gyro = 100.0f;
+  242   1          else if(expect_gyro < -100.0f)
+  243   1              expect_gyro = -100.0f;
+  244   1      
+  245   1          // 第二级PD：角速度误差 -> 电机差速修正值
+  246   1          err_gyro = expect_gyro - imu.gyro_z;
+  247   1          err_gyro_history[1] = err_gyro_history[0];
+  248   1          err_gyro_history[0] = err_gyro;
+  249   1      
+  250   1          correction = pd_direction.kp_gyro * err_gyro_history[0] +
+  251   1                       pd_direction.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]);
+  252   1      
+  253   1          // 输出限幅
+  254   1          if(correction > 100.0f)
+  255   1              correction = 100.0f;
+  256   1          else if(correction < -100.0f)
+  257   1              correction = -100.0f;
+  258   1      
+  259   1          return correction;
+  260   1      }
+  261          
+  262          //-------------------------------------------------------------------------------------------------------
              -------------
-  267          // 函数简介     PD角度环 - 角度误差转期望角速度
-  268          // 参数说明     current_angle   当前角度(如yaw)
-  269          // 参数说明     target_angle    目标角度
-  270          // 返回参数     float           期望角速度
-  271          // 使用示例     float expect_gyro = pd_angle_loop(current_yaw, target_yaw);
-  272          // 备注信息     用于转弯控制：角度误差->PD计算->期望角速度
-  273          //-------------------------------------------------------------------------------------------------------
+  263          // 函数简介     PD角度环 - 角度误差转期望角速度
+  264          // 参数说明     current_angle   当前角度(如yaw)
+  265          // 参数说明     target_angle    目标角度
+  266          // 返回参数     float           期望角速度
+  267          // 使用示例     float expect_gyro = pd_angle_loop(current_yaw, target_yaw);
+  268          // 备注信息     用于转弯控制：角度误差->PD计算->期望角速度
+  269          //-------------------------------------------------------------------------------------------------------
              -------------
-  274          float pd_angle_loop(float current_angle, float target_angle)
-  275          {
-  276   1          static float err_angle_history[3] = {0};
-  277   1          float err_angle = 0;
-  278   1          float expect_gyro = 0;
-  279   1      
-  280   1          // 角度误差计算(处理角度跳变)
-  281   1          err_angle = target_angle - current_angle;
-  282   1          if(err_angle > 180.0f)
-  283   1              err_angle -= 360.0f;
-  284   1          else if(err_angle < -180.0f)
-  285   1              err_angle += 360.0f;
-  286   1      
-  287   1          // 误差历史更新
-  288   1          err_angle_history[2] = err_angle_history[1];
-  289   1          err_angle_history[1] = err_angle_history[0];
-  290   1          err_angle_history[0] = err_angle;
+  270          float pd_angle_loop(float current_angle, float target_angle)
+  271          {
+  272   1          static float err_angle_history[3] = {0};
+  273   1          float err_angle = 0;
+  274   1          float expect_gyro = 0;
+  275   1      
+  276   1          // 角度误差计算(处理角度跳变)
+  277   1          err_angle = target_angle - current_angle;
+  278   1          if(err_angle > 180.0f)
+  279   1              err_angle -= 360.0f;
+  280   1          else if(err_angle < -180.0f)
+  281   1              err_angle += 360.0f;
+  282   1      
+  283   1          // 误差历史更新
+  284   1          err_angle_history[2] = err_angle_history[1];
+  285   1          err_angle_history[1] = err_angle_history[0];
+  286   1          err_angle_history[0] = err_angle;
+  287   1      
+  288   1          // PD计算：角度误差 -> 期望角速度
+  289   1          expect_gyro = pd_angle.kp * err_angle_history[0] +
+  290   1                        pd_angle.kd * (err_angle_history[1] - err_angle_history[2]);
   291   1      
-  292   1          // PD计算：角度误差 -> 期望角速度
-  293   1          expect_gyro = pd_angle.kp * err_angle_history[0] +
-  294   1                        pd_angle.kd * (err_angle_history[1] - err_angle_history[2]);
-  295   1      
-  296   1          // 输出限幅
-  297   1          if(expect_gyro > 100.0f)
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 6   
+  292   1          // 输出限幅
+  293   1          if(expect_gyro > 100.0f)
+  294   1              expect_gyro = 100.0f;
+  295   1          else if(expect_gyro < -100.0f)
+  296   1              expect_gyro = -100.0f;
+  297   1      
+C251 COMPILER V5.60.0,  pid                                                                21/01/26  02:20:57  PAGE 6   
 
-  298   1              expect_gyro = 100.0f;
-  299   1          else if(expect_gyro < -100.0f)
-  300   1              expect_gyro = -100.0f;
-  301   1      
-  302   1          return expect_gyro;
-  303   1      }
-  304          
-  305          //-------------------------------------------------------------------------------------------------------
+  298   1          return expect_gyro;
+  299   1      }
+  300          
+  301          //-------------------------------------------------------------------------------------------------------
              -------------
-  306          // 函数简介     PD角速度环 - 角速度误差转电机控制值
-  307          // 参数说明     expect_gyro     期望角速度
-  308          // 参数说明     actual_gyro     实际角速度
-  309          // 返回参数     int16           电机控制值
-  310          // 使用示例     int16 output = pd_gyro_loop(expect_gyro, actual_z_gyro);
-  311          // 备注信息     用于角速度闭环控制：角速度误差->PD计算->电机控制量
-  312          //-------------------------------------------------------------------------------------------------------
+  302          // 函数简介     PD角速度环 - 角速度误差转电机控制值
+  303          // 参数说明     expect_gyro     期望角速度
+  304          // 参数说明     actual_gyro     实际角速度
+  305          // 返回参数     int16           电机控制值
+  306          // 使用示例     int16 output = pd_gyro_loop(expect_gyro, actual_z_gyro);
+  307          // 备注信息     用于角速度闭环控制：角速度误差->PD计算->电机控制量
+  308          //-------------------------------------------------------------------------------------------------------
              -------------
-  313          int16 pd_gyro_loop(float expect_gyro, float actual_gyro)
-  314          {
-  315   1          static float err_gyro_history[2] = {0};
-  316   1          float err_gyro = 0;
-  317   1          int16 output = 0;
-  318   1      
-  319   1          // 角速度误差计算
-  320   1          err_gyro = expect_gyro - actual_gyro;
+  309          int16 pd_gyro_loop(float expect_gyro, float actual_gyro)
+  310          {
+  311   1          static float err_gyro_history[2] = {0};
+  312   1          float err_gyro = 0;
+  313   1          int16 output = 0;
+  314   1      
+  315   1          // 角速度误差计算
+  316   1          err_gyro = expect_gyro - actual_gyro;
+  317   1      
+  318   1          // 误差历史更新
+  319   1          err_gyro_history[1] = err_gyro_history[0];
+  320   1          err_gyro_history[0] = err_gyro;
   321   1      
-  322   1          // 误差历史更新
-  323   1          err_gyro_history[1] = err_gyro_history[0];
-  324   1          err_gyro_history[0] = err_gyro;
+  322   1          // PD计算：角速度误差 -> 电机控制值
+  323   1          output = (int16)(pd_gyro.kp_gyro * err_gyro_history[0] +
+  324   1                           pd_gyro.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]));
   325   1      
-  326   1          // PD计算：角速度误差 -> 电机控制值
-  327   1          output = (int16)(pd_gyro.kp_gyro * err_gyro_history[0] +
-  328   1                           pd_gyro.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]));
-  329   1      
-  330   1          // 输出限幅
-  331   1          if(output > 5000)
-  332   1              output = 5000;
-  333   1          else if(output < -5000)
-  334   1              output = -5000;
-  335   1      
-  336   1          return output;
-  337   1      }
-  338          
-  339          //-------------------------------------------------------------------------------------------------------
+  326   1          // 输出限幅
+  327   1          if(output > 5000)
+  328   1              output = 5000;
+  329   1          else if(output < -5000)
+  330   1              output = -5000;
+  331   1      
+  332   1          return output;
+  333   1      }
+  334          
+  335          //-------------------------------------------------------------------------------------------------------
              -------------
-  340          // 函数简介     PD方向环+角速度环组合控制 (推荐用于循迹)
-  341          // 参数说明     err_position    位置误差(ADC归一化值-中心值)
-  342          // 返回参数     float           电机差速修正值
-  343          // 使用示例     float correction = pd_direction_gyro_loop(adc_error);
-  344          // 备注信息     位置误差->期望角速度->角速度闭环->电机差速修正值
-  345          //              控制流程:
-  346          //              1. 位置误差经PD计算得到期望角速度
-  347          //              2. 期望角速度与实际角速度比较
-  348          //              3. 角速度误差经PD计算得到电机差速修正值
-  349          //              4. 双环结构提供快速响应和良好阻尼
-  350          //-------------------------------------------------------------------------------------------------------
+  336          // 函数简介     PD方向环+角速度环组合控制 (推荐用于循迹)
+  337          // 参数说明     err_position    位置误差(ADC归一化值-中心值)
+  338          // 返回参数     float           电机差速修正值
+  339          // 使用示例     float correction = pd_direction_gyro_loop(adc_error);
+  340          // 备注信息     位置误差->期望角速度->角速度闭环->电机差速修正值
+  341          //              控制流程:
+  342          //              1. 位置误差经PD计算得到期望角速度
+  343          //              2. 期望角速度与实际角速度比较
+  344          //              3. 角速度误差经PD计算得到电机差速修正值
+  345          //              4. 双环结构提供快速响应和良好阻尼
+  346          //-------------------------------------------------------------------------------------------------------
              -------------
-  351          float pd_direction_gyro_loop(float err_position)
-  352          {
-  353   1          static float err_position_history[4] = {0};
-  354   1          static float err_gyro_history[2] = {0};
-  355   1          float expect_gyro;
-  356   1          float err_gyro;
-  357   1          float correction;
-  358   1      
-  359   1          // ========== 第一级：PD方向环 ==========
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 7   
+  347          float pd_direction_gyro_loop(float err_position)
+  348          {
+  349   1          static float err_position_history[4] = {0};
+  350   1          static float err_gyro_history[2] = {0};
+  351   1          float expect_gyro;
+  352   1          float err_gyro;
+  353   1          float correction;
+  354   1      
+  355   1          // ========== 第一级：PD方向环 ==========
+  356   1          // 误差历史更新
+  357   1          err_position_history[2] = err_position_history[1];
+  358   1          err_position_history[1] = err_position_history[0];
+  359   1          err_position_history[0] = err_position;
+C251 COMPILER V5.60.0,  pid                                                                21/01/26  02:20:57  PAGE 7   
 
-  360   1          // 误差历史更新
-  361   1          err_position_history[2] = err_position_history[1];
-  362   1          err_position_history[1] = err_position_history[0];
-  363   1          err_position_history[0] = err_position;
+  360   1      
+  361   1          // PD计算：位置误差 -> 期望角速度
+  362   1          expect_gyro = pd_direction.kp * err_position_history[0] +
+  363   1                        pd_direction.kd * (err_position_history[0] - err_position_history[1]);
   364   1      
-  365   1          // PD计算：位置误差 -> 期望角速度
-  366   1          expect_gyro = pd_direction.kp * err_position_history[0] +
-  367   1                        pd_direction.kd * (err_position_history[0] - err_position_history[1]);
-  368   1      
-  369   1          // 期望角速度限幅 (防止响应过激)
-  370   1          if(expect_gyro > 100.0f)
-  371   1              expect_gyro = 100.0f;
-  372   1          else if(expect_gyro < -100.0f)
-  373   1              expect_gyro = -100.0f;
+  365   1          // 期望角速度限幅 (防止响应过激)
+  366   1          if(expect_gyro > 100.0f)
+  367   1              expect_gyro = 100.0f;
+  368   1          else if(expect_gyro < -100.0f)
+  369   1              expect_gyro = -100.0f;
+  370   1      
+  371   1          // ========== 第二级：PD角速度环 ==========
+  372   1          // 角速度误差计算
+  373   1          err_gyro = expect_gyro - imu.gyro_z;
   374   1      
-  375   1          // ========== 第二级：PD角速度环 ==========
-  376   1          // 角速度误差计算
-  377   1          err_gyro = expect_gyro - imu.gyro_z;
+  375   1          // 误差历史更新
+  376   1          err_gyro_history[1] = err_gyro_history[0];
+  377   1          err_gyro_history[0] = err_gyro;
   378   1      
-  379   1          // 误差历史更新
-  380   1          err_gyro_history[1] = err_gyro_history[0];
-  381   1          err_gyro_history[0] = err_gyro;
+  379   1          // PD计算：角速度误差 -> 电机差速修正值
+  380   1          correction = pd_direction.kp_gyro * err_gyro_history[0] +
+  381   1                       pd_direction.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]);
   382   1      
-  383   1          // PD计算：角速度误差 -> 电机差速修正值
-  384   1          correction = pd_direction.kp_gyro * err_gyro_history[0] +
-  385   1                       pd_direction.kd_gyro * (err_gyro_history[0] - err_gyro_history[1]);
-  386   1      
-  387   1          // 输出限幅 (根据实际需要调整)
-  388   1          if(correction > 100.0f)
-  389   1              correction = 100.0f;
-  390   1          else if(correction < -100.0f)
-  391   1              correction = -100.0f;
-  392   1      
-  393   1          return correction;
-  394   1      }
-  395          
-  396          //-------------------------------------------------------------------------------------------------------
+  383   1          // 输出限幅 (根据实际需要调整)
+  384   1          if(correction > 100.0f)
+  385   1              correction = 100.0f;
+  386   1          else if(correction < -100.0f)
+  387   1              correction = -100.0f;
+  388   1      
+  389   1          return correction;
+  390   1      }
+  391          
+  392          //-------------------------------------------------------------------------------------------------------
              -------------
-  397          // 函数简介     清除PD控制器历史误差
-  398          // 参数说明     void
-  399          // 返回参数     void
-  400          // 使用示例     pd_clear_history();
-  401          // 备注信息     清除所有PD控制器的误差历史，用于重启控制或切换模式
-  402          //              注意：此函数仅清除误差历史，不清除PD参数
-  403          //-------------------------------------------------------------------------------------------------------
+  393          // 函数简介     清除PD控制器历史误差
+  394          // 参数说明     void
+  395          // 返回参数     void
+  396          // 使用示例     pd_clear_history();
+  397          // 备注信息     清除所有PD控制器的误差历史，用于重启控制或切换模式
+  398          //              注意：此函数仅清除误差历史，不清除PD参数
+  399          //-------------------------------------------------------------------------------------------------------
              -------------
-  404          void pd_clear_history(void)
-  405          {
-  406   1          // 注意：静态变量无法在外部直接清零
-  407   1          // 这是一个示例函数，实际使用时需要在各PD函数内部添加清除逻辑
-  408   1          // 或者重启控制器来清除历史误差
-  409   1      }
-*** WARNING C183 IN LINE 316 OF ..\code\pid.c: dead assignment eliminated
+  400          void pd_clear_history(void)
+  401          {
+  402   1          // 注意：静态变量无法在外部直接清零
+  403   1          // 这是一个示例函数，实际使用时需要在各PD函数内部添加清除逻辑
+  404   1          // 或者重启控制器来清除历史误差
+  405   1      }
+*** WARNING C183 IN LINE 312 OF ..\code\pid.c: dead assignment eliminated
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =      2146     ------
+  code size            =      2102     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
@@ -475,12 +471,12 @@ Module Information          Static   Overlayable
   edata size           =    ------     ------
   bit size             =    ------     ------
   ebit size            =    ------     ------
-C251 COMPILER V5.60.0,  pid                                                                18/01/26  23:59:59  PAGE 8   
-
   bitaddressable size  =    ------     ------
   ebitaddressable size =    ------     ------
   far data size        =    ------     ------
   huge data size       =    ------     ------
+C251 COMPILER V5.60.0,  pid                                                                21/01/26  02:20:57  PAGE 8   
+
   const size           =    ------     ------
   hconst size          =        98     ------
 End of Module Information.
