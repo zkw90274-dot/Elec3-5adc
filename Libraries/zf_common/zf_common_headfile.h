@@ -101,7 +101,6 @@
 //用户的自定义头文件
 #include "motor.h"
 #include "key.h"
-#include "lcd.h"
 #include "adc.h"
 #include "uart.h"
 #include "encoder.h"

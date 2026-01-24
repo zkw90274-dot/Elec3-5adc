@@ -56,8 +56,7 @@ void main()
 {
     clock_init(SYSTEM_CLOCK_30M);
     debug_init();
-
-    Lcd_Init();
+	
     key_init();
     Motor_Init();
     Adc_All_Init();

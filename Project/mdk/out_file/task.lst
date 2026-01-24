@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  task                                                               21/01/26  02:20:57  PAGE 1   
+C251 COMPILER V5.60.0,  task                                                               24/01/26  18:53:03  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE task
@@ -66,7 +66,7 @@ stmt  level    source
    49          float position_error_calc(void)
    50          {
    51   1          float error;
-C251 COMPILER V5.60.0,  task                                                               21/01/26  02:20:57  PAGE 2   
+C251 COMPILER V5.60.0,  task                                                               24/01/26  18:53:03  PAGE 2   
 
    52   1      
    53   1          error = (float)adc_normalized_list[2] - 25.0f;
@@ -134,7 +134,7 @@ stmt  level    source
              -��
   110          //              控制流程: 传感器检查 -> 位置误差计算 -> PD控制 -> 异常处理
   111          //-------------------------------------------------------------------------------------------------------
-C251 COMPILER V5.60.0,  task                                                               21/01/26  02:20:57  PAGE 3   
+C251 COMPILER V5.60.0,  task                                                               24/01/26  18:53:03  PAGE 3   
 
              -------------
   112          float pd_control_with_sensor_check(void)
@@ -202,7 +202,7 @@ stmt  level    source
   170   2              case CONTROL_MODE_PD_DIRECTION:
   171   2                  return "PD方向环+角速度环";
   172   2              default:
-C251 COMPILER V5.60.0,  task                                                               21/01/26  02:20:57  PAGE 4   
+C251 COMPILER V5.60.0,  task                                                               24/01/26  18:53:03  PAGE 4   
 
   173   2                  return "未知模式";
   174   2          }
@@ -270,7 +270,7 @@ stmt  level    source
              -------------
   233          void imu_update_task(void)
   234          {
-C251 COMPILER V5.60.0,  task                                                               21/01/26  02:20:57  PAGE 5   
+C251 COMPILER V5.60.0,  task                                                               24/01/26  18:53:03  PAGE 5   
 
   235   1          imu_update();
   236   1      }

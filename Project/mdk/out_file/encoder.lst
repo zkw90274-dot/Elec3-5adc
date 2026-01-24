@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  encoder                                                            21/01/26  02:20:57  PAGE 1   
+C251 COMPILER V5.60.0,  encoder                                                            24/01/26  18:53:03  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE encoder
@@ -66,7 +66,7 @@ stmt  level    source
    47          //-------------------------------------------------------------------------------------------------------
              -------------
    48          // 函数简介     获取滤波后的编码器值
-C251 COMPILER V5.60.0,  encoder                                                            21/01/26  02:20:57  PAGE 2   
+C251 COMPILER V5.60.0,  encoder                                                            24/01/26  18:53:03  PAGE 2   
 
    49          // 参数说明     void
    50          // 返回参数     void

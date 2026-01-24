@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               21/01/26  02:20:57  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               24/01/26  18:53:03  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -66,7 +66,7 @@ stmt  level    source
    47          
    48          void pit_handler_1(void);
    49          void pit_handler_2(void);
-C251 COMPILER V5.60.0,  main                                                               21/01/26  02:20:57  PAGE 2   
+C251 COMPILER V5.60.0,  main                                                               24/01/26  18:53:03  PAGE 2   
 
    50          
    51          float left_target = 0;                    //左轮目标值
@@ -77,119 +77,118 @@ stmt  level    source
    56          {
    57   1          clock_init(SYSTEM_CLOCK_30M);
    58   1          debug_init();
-   59   1      
-   60   1          Lcd_Init();
-   61   1          key_init();
-   62   1          Motor_Init();
-   63   1          Adc_All_Init();
-   64   1          Encoder_Init();
-   65   1      
-   66   1          // IMU660RB初始化
-   67   1          imu_state = imu_init();
-   68   1          if(imu_state == 0)
-   69   1          {
-   70   2              printf("IMU init success!\r\n");
-   71   2          }
-   72   1          else
-   73   1          {
-   74   2              printf("IMU init failed!\r\n");
-   75   2          }
-   76   1      
-   77   1          // ========== 控制器初始化 (根据 task.h 中的 CONTROL_MODE_CURRENT 选择模式) ==========
-   78   1      
-   79   1          // SDSD初始化 (用于 SDSD 控制模式)
-   80   1          SDSD_init(&SDSD, 1.0f, 1.0f, 1.0f);
-   81   1          pid_init(&pid_SDSD, 2.0f, 0.0f, 0.5f);    // SDSD的PID参数: Kp=2.0, Ki=0, Kd=0.5
-   82   1          pid_set_target(&pid_SDSD, 0);             // SDSD期望偏差为0(居中)
-   83   1      
-   84   1          // 电机速度环PID初始化 (两种模式都需要)
-   85   1          pid_init(&pid_motor_left, 1.7f, 0.22f, 0.2f);     // 左电机PID参数
-   86   1          pid_init(&pid_motor_right, 1.7f, 0.1f, 0.0f);     // 右电机PID参数
-   87   1      
-   88   1          // 设置目标速度 (单位: 编码器计数值每10ms)
-   89   1          // 根据实际测试调整，建议从20-50开始
-   90   1          pid_set_target(&pid_motor_left, 30.0f);    // 左电机目标速度
-   91   1          pid_set_target(&pid_motor_right, 30.0f);   // 右电机目标速度
-   92   1      
-   93   1          // PD方向环+角速度环初始化 (用于 PD方向环控制模式)
-   94   1          // Kp=2.5, Kd=0.8 (方向环) | Kp_gyro=1.2, Kd_gyro=0.3 (角速度环)
-   95   1          pd_init(&pd_direction, 2.5f, 0.8f, 1.2f, 0.3f);
-   96   1      
-   97   1      // 此处编写用户代码 例如外设初始化代码等
-   98   1          tim1_irq_handler = pit_handler_1;             //重写tim0中断处理函数
-   99   1          tim2_irq_handler = pit_handler_2;             //重写tim0中断处理函数
-  100   1      
-  101   1          pit_ms_init(PIT_CH_1,10);                   // 初始化 PIT 为周期中断 10ms 周期
-  102   1          pit_ms_init(PIT_CH_2,50);                   // 初始化 PIT 为周期中断 10ms 周期
-  103   1      
-  104   1          while(1)
-  105   1          {
-  106   2              // 此处编写需要循环执行的代码
-  107   2      
-  108   2              // 获取ADC值 (使用快速去极值平均滤波 - 推荐)
-  109   2              Adc_Getval_Fast();
-  110   2              Normalization();
-  111   2      
-  112   2              // 打印当前控制模式和传感器数据
-  113   2              printf("模式: %s | ADC: %d,%d,%d,%d,%d\r\n",
-  114   2                     get_mode_name(get_control_mode()),
-  115   2                     adc_normalized_list[0],
-C251 COMPILER V5.60.0,  main                                                               21/01/26  02:20:57  PAGE 3   
+   59   1        
+   60   1          key_init();
+   61   1          Motor_Init();
+   62   1          Adc_All_Init();
+   63   1          Encoder_Init();
+   64   1      
+   65   1          // IMU660RB初始化
+   66   1          imu_state = imu_init();
+   67   1          if(imu_state == 0)
+   68   1          {
+   69   2              printf("IMU init success!\r\n");
+   70   2          }
+   71   1          else
+   72   1          {
+   73   2              printf("IMU init failed!\r\n");
+   74   2          }
+   75   1      
+   76   1          // ========== 控制器初始化 (根据 task.h 中的 CONTROL_MODE_CURRENT 选择模式) ==========
+   77   1      
+   78   1          // SDSD初始化 (用于 SDSD 控制模式)
+   79   1          SDSD_init(&SDSD, 1.0f, 1.0f, 1.0f);
+   80   1          pid_init(&pid_SDSD, 2.0f, 0.0f, 0.5f);    // SDSD的PID参数: Kp=2.0, Ki=0, Kd=0.5
+   81   1          pid_set_target(&pid_SDSD, 0);             // SDSD期望偏差为0(居中)
+   82   1      
+   83   1          // 电机速度环PID初始化 (两种模式都需要)
+   84   1          pid_init(&pid_motor_left, 1.7f, 0.22f, 0.2f);     // 左电机PID参数
+   85   1          pid_init(&pid_motor_right, 1.7f, 0.1f, 0.0f);     // 右电机PID参数
+   86   1      
+   87   1          // 设置目标速度 (单位: 编码器计数值每10ms)
+   88   1          // 根据实际测试调整，建议从20-50开始
+   89   1          pid_set_target(&pid_motor_left, 30.0f);    // 左电机目标速度
+   90   1          pid_set_target(&pid_motor_right, 30.0f);   // 右电机目标速度
+   91   1      
+   92   1          // PD方向环+角速度环初始化 (用于 PD方向环控制模式)
+   93   1          // Kp=2.5, Kd=0.8 (方向环) | Kp_gyro=1.2, Kd_gyro=0.3 (角速度环)
+   94   1          pd_init(&pd_direction, 2.5f, 0.8f, 1.2f, 0.3f);
+   95   1      
+   96   1      // 此处编写用户代码 例如外设初始化代码等
+   97   1          tim1_irq_handler = pit_handler_1;             //重写tim0中断处理函数
+   98   1          tim2_irq_handler = pit_handler_2;             //重写tim0中断处理函数
+   99   1      
+  100   1          pit_ms_init(PIT_CH_1,10);                   // 初始化 PIT 为周期中断 10ms 周期
+  101   1          pit_ms_init(PIT_CH_2,50);                   // 初始化 PIT 为周期中断 10ms 周期
+  102   1      
+  103   1          while(1)
+  104   1          {
+  105   2              // 此处编写需要循环执行的代码
+  106   2      
+  107   2              // 获取ADC值 (使用快速去极值平均滤波 - 推荐)
+  108   2              Adc_Getval_Fast();
+  109   2              Normalization();
+  110   2      
+  111   2              // 打印当前控制模式和传感器数据
+  112   2              printf("模式: %s | ADC: %d,%d,%d,%d,%d\r\n",
+  113   2                     get_mode_name(get_control_mode()),
+  114   2                     adc_normalized_list[0],
+  115   2                     adc_normalized_list[1],
+C251 COMPILER V5.60.0,  main                                                               24/01/26  18:53:03  PAGE 3   
 
-  116   2                     adc_normalized_list[1],
-  117   2                     adc_normalized_list[2],
-  118   2                     adc_normalized_list[3],
-  119   2                     adc_normalized_list[4]);
-  120   2      
-  121   2              // 打印编码器数据
-  122   2              printf("Encoder: R=%d, L=%d\r\n", encoder_data_dir_R, encoder_data_dir_L);
-  123   2      
-  124   2              // 打印IMU欧拉角数据
-  125   2              printf("IMU: Roll=%.2f, Pitch=%.2f, Yaw=%.2f\r\n",
-  126   2                     imu.euler.roll, imu.euler.pitch, imu.euler.yaw);
-  127   2      
-  128   2              // 延时避免打印过快
-  129   2              system_delay_ms(100);
-  130   2          }
-  131   1      }
-  132          //-------------------------------------------------------------------------------------------------------
+  116   2                     adc_normalized_list[2],
+  117   2                     adc_normalized_list[3],
+  118   2                     adc_normalized_list[4]);
+  119   2      
+  120   2              // 打印编码器数据
+  121   2              printf("Encoder: R=%d, L=%d\r\n", encoder_data_dir_R, encoder_data_dir_L);
+  122   2      
+  123   2              // 打印IMU欧拉角数据
+  124   2              printf("IMU: Roll=%.2f, Pitch=%.2f, Yaw=%.2f\r\n",
+  125   2                     imu.euler.roll, imu.euler.pitch, imu.euler.yaw);
+  126   2      
+  127   2              // 延时避免打印过快
+  128   2              system_delay_ms(100);
+  129   2          }
+  130   1      }
+  131          //-------------------------------------------------------------------------------------------------------
              -------------
-  133          // 函数简介     PIT 的周期中断处理函数 这个函数将在 PIT 对应的定时器中断调用
+  132          // 函数简介     PIT 的周期中断处理函数 这个函数将在 PIT 对应的定时器中断调用
              - 详见 isr.c
-  134          // 参数说明     void
-  135          // 返回参数     void
-  136          // 使用示例     pit_handler();
-  137          // 备注信息     10ms周期中断，处理编码器采集和电机控制
-  138          //-------------------------------------------------------------------------------------------------------
+  133          // 参数说明     void
+  134          // 返回参数     void
+  135          // 使用示例     pit_handler();
+  136          // 备注信息     10ms周期中断，处理编码器采集和电机控制
+  137          //-------------------------------------------------------------------------------------------------------
              -------------
-  139          void pit_handler_1 (void)
-  140          {
-  141   1          // 调用电机控制任务 (封装在task.c中)
-  142   1          // 功能: 编码器采集 -> ADC判断 -> PD控制 -> 电机输出
-  143   1          motor_control_task();
-  144   1      }
-  145          
-  146          //-------------------------------------------------------------------------------------------------------
+  138          void pit_handler_1 (void)
+  139          {
+  140   1          // 调用电机控制任务 (封装在task.c中)
+  141   1          // 功能: 编码器采集 -> ADC判断 -> PD控制 -> 电机输出
+  142   1          motor_control_task();
+  143   1      }
+  144          
+  145          //-------------------------------------------------------------------------------------------------------
              -------------
-  147          // 函数简介     PIT 的周期中断处理函数 这个函数将在 PIT 对应的定时器中断调用
+  146          // 函数简介     PIT 的周期中断处理函数 这个函数将在 PIT 对应的定时器中断调用
              - 详见 isr.c
-  148          // 参数说明     void
-  149          // 返回参数     void
-  150          // 使用示例     pit_handler();
-  151          // 备注信息     50ms周期中断，更新IMU数据
-  152          //-------------------------------------------------------------------------------------------------------
+  147          // 参数说明     void
+  148          // 返回参数     void
+  149          // 使用示例     pit_handler();
+  150          // 备注信息     50ms周期中断，更新IMU数据
+  151          //-------------------------------------------------------------------------------------------------------
              -------------
-  153          void pit_handler_2 (void)
-  154          {
-  155   1          // 调用IMU更新任务 (封装在task.c中)
-  156   1          // 功能: 获取IMU原始数据 -> 四元数解算 -> 欧拉角更新
-  157   1          imu_update_task();
-  158   1      }
+  152          void pit_handler_2 (void)
+  153          {
+  154   1          // 调用IMU更新任务 (封装在task.c中)
+  155   1          // 功能: 获取IMU原始数据 -> 四元数解算 -> 欧拉角更新
+  156   1          imu_update_task();
+  157   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =       700     ------
+  code size            =       697     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
@@ -203,9 +202,9 @@ Module Information          Static   Overlayable
   ebitaddressable size =    ------     ------
   far data size        =    ------     ------
   huge data size       =    ------     ------
-C251 COMPILER V5.60.0,  main                                                               21/01/26  02:20:57  PAGE 4   
-
   const size           =    ------     ------
+C251 COMPILER V5.60.0,  main                                                               24/01/26  18:53:03  PAGE 4   
+
   hconst size          =       161     ------
 End of Module Information.
 

@@ -1,6 +1,8 @@
 #include "key.h"
 
+//-------------------------------------------------------------------------------------------------------------------
 // 全局变量定义
+//-------------------------------------------------------------------------------------------------------------------
 uint8 key_val, key_old, key_down, key_up;
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -8,55 +10,85 @@ uint8 key_val, key_old, key_down, key_up;
 // 参数说明     void
 // 返回参数     void
 // 使用示例     key_init();
-// 备注信息     配置6个按键为上拉输入模式
+// 备注信息     配置4个按键为上拉输入模式
 //-------------------------------------------------------------------------------------------------------------------
 void key_init(void)
 {
-    gpio_init(IO_P32, GPI, 1, GPI_PULL_UP);
-    gpio_init(IO_P33, GPI, 1, GPI_PULL_UP);
-    gpio_init(IO_P36, GPI, 1, GPI_PULL_UP);
-    gpio_init(IO_P50, GPI, 1, GPI_PULL_UP);
-    gpio_init(IO_P51, GPI, 1, GPI_PULL_UP);
-    gpio_init(IO_P37, GPI, 1, GPI_PULL_UP);
+    gpio_init(KEY1_PIN, GPI, 1, GPI_PULL_UP);
+    gpio_init(KEY2_PIN, GPI, 1, GPI_PULL_UP);
+    gpio_init(KEY3_PIN, GPI, 1, GPI_PULL_UP);
+    gpio_init(KEY4_PIN, GPI, 1, GPI_PULL_UP);
 }
 
 //-------------------------------------------------------------------------------------------------------------------
-// 函数简介     按键扫描
+// 函数简介     按键扫描（位运算消抖）
 // 参数说明     void
-// 返回参数     uint8           按键键值 1-6，无按键按下返回0
-// 使用示例     uint8 key = Key_Scan();
-// 备注信息     检测6个按键的状态
+// 返回参数     uint8           按键键值 1-4，无按键按下返回0
+// 使用示例     uint8 key = Key_Read();
+// 备注信息     使用位运算进行按键消抖，连续读取一致才确认状态
+//              按键按下时引脚为低电平(0)
 //-------------------------------------------------------------------------------------------------------------------
-uint8 Key_Scan(void)
+uint8 Key_Read(void)
 {
-    uint8 key_temp = 0;
-    if(gpio_get_level(IO_P32) == 0) key_temp = 1;
-    if(gpio_get_level(IO_P33) == 0) key_temp = 2;
-    if(gpio_get_level(IO_P36) == 0) key_temp = 3;
-    if(gpio_get_level(IO_P50) == 0) key_temp = 4;
-    if(gpio_get_level(IO_P51) == 0) key_temp = 5;
-    if(gpio_get_level(IO_P37) == 0) key_temp = 6;
+    uint8 key_temp = KEY_NULL;
+
+    // 连续3次读取一致才确认（位运算消抖）
+    if(gpio_get_level(KEY1_PIN) == 0 &&
+       gpio_get_level(KEY1_PIN) == 0 &&
+       gpio_get_level(KEY1_PIN) == 0)
+        key_temp = KEY1;
+
+    if(gpio_get_level(KEY2_PIN) == 0 &&
+       gpio_get_level(KEY2_PIN) == 0 &&
+       gpio_get_level(KEY2_PIN) == 0)
+        key_temp = KEY2;
+
+    if(gpio_get_level(KEY3_PIN) == 0 &&
+       gpio_get_level(KEY3_PIN) == 0 &&
+       gpio_get_level(KEY3_PIN) == 0)
+        key_temp = KEY3;
+
+    if(gpio_get_level(KEY4_PIN) == 0 &&
+       gpio_get_level(KEY4_PIN) == 0 &&
+       gpio_get_level(KEY4_PIN) == 0)
+        key_temp = KEY4;
+
     return key_temp;
 }
 
 //-------------------------------------------------------------------------------------------------------------------
-// 函数简介     按键处理
+// 函数简介     按键处理函数
 // 参数说明     void
 // 返回参数     void
 // 使用示例     Key_Disp();
 // 备注信息     检测按键按下和释放事件，更新按键状态
+//              key_down: 按键按下标志（只在按下那一帧为1）
+//              key_up:   按键释放标志（只在释放那一帧为1）
 //-------------------------------------------------------------------------------------------------------------------
 void Key_Disp(void)
 {
-    key_val = Key_Scan();
-    key_down = key_val & (key_val ^ key_old);
-    key_up = ~key_val & (key_val ^ key_old);
-    key_old = key_val;
+    key_val = Key_Read();                          // 实时读取键码值
+    key_down = key_val & (key_old ^ key_val);      // 捕捉按键下降沿（按下）
+    key_up = ~key_val & (key_old ^ key_val);       // 捕捉按键上升沿（释放）
+    key_old = key_val;                             // 辅助扫描变量
 
-    if(key_down == 1) lcd_cnt++;
-    if(key_down == 2) lcd_cnt++;
-    if(key_down == 3) lcd_cnt++;
-    if(key_down == 4) lcd_cnt++;
-    if(key_down == 5) lcd_cnt++;
-    if(key_down == 6) lcd_cnt++;
+    // 按键事件处理（用户根据需求添加）
+    switch(key_down)
+    {
+        case KEY1:
+            // 按键1处理
+            break;
+
+        case KEY2:
+            // 按键2处理
+            break;
+
+        case KEY3:
+            // 按键3处理
+            break;
+
+        case KEY4:
+            // 按键4处理
+            break;
+    }
 }

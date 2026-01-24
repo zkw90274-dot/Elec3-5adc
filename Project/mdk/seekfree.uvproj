@@ -765,11 +765,6 @@
               <FilePath>..\code\key.c</FilePath>
             </File>
             <File>
-              <FileName>lcd.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\code\lcd.c</FilePath>
-            </File>
-            <File>
               <FileName>adc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\adc.c</FilePath>
@@ -805,19 +800,9 @@
               <FilePath>..\code\IMU.c</FilePath>
             </File>
             <File>
-              <FileName>IMU.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\code\IMU.h</FilePath>
-            </File>
-            <File>
               <FileName>task.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\code\task.c</FilePath>
-            </File>
-            <File>
-              <FileName>task.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\code\task.h</FilePath>
             </File>
           </Files>
         </Group>

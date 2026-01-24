@@ -40,7 +40,6 @@
 ".\out_file\seekfree_assistant_interface.obj",
 ".\out_file\motor.obj",
 ".\out_file\key.obj",
-".\out_file\lcd.obj",
 ".\out_file\adc.obj",
 ".\out_file\uart.obj",
 ".\out_file\pid.obj",
