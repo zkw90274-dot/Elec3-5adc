@@ -804,6 +804,11 @@
               <FileType>1</FileType>
               <FilePath>..\code\task.c</FilePath>
             </File>
+            <File>
+              <FileName>quaternion.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\quaternion.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

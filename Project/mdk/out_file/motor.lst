@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  motor                                                              24/01/26  18:53:02  PAGE 1   
+C251 COMPILER V5.60.0,  motor                                                              25/01/26  01:31:17  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE motor
@@ -66,7 +66,7 @@ stmt  level    source
    52           *          - 左电机: DIR_HIGH + 7%占空比
    53           *          - 右电机: DIR_LOW + 7%占空比
    54           * @note   注释代码为占空比自动变化的测试程序，可根据需要启用
-C251 COMPILER V5.60.0,  motor                                                              24/01/26  18:53:02  PAGE 2   
+C251 COMPILER V5.60.0,  motor                                                              25/01/26  01:31:17  PAGE 2   
 
    55           * @param  None
    56           * @retval None
@@ -134,7 +134,7 @@ stmt  level    source
   117           * @details 设置右电机方向为正转(DIR_LOW)，并设置PWM占空比
   118           * @param  pwm PWM占空比百分比 (范围: 0-100)
   119           * @retval None
-C251 COMPILER V5.60.0,  motor                                                              24/01/26  18:53:02  PAGE 3   
+C251 COMPILER V5.60.0,  motor                                                              25/01/26  01:31:17  PAGE 3   
 
   120           */
   121          void Motor_RightForward(uint8 pwm)

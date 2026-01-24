@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  main                                                               24/01/26  18:53:03  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               25/01/26  01:33:53  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
@@ -66,7 +66,7 @@ stmt  level    source
    47          
    48          void pit_handler_1(void);
    49          void pit_handler_2(void);
-C251 COMPILER V5.60.0,  main                                                               24/01/26  18:53:03  PAGE 2   
+C251 COMPILER V5.60.0,  main                                                               25/01/26  01:33:53  PAGE 2   
 
    50          
    51          float left_target = 0;                    //左轮目标值
@@ -134,7 +134,7 @@ stmt  level    source
   113   2                     get_mode_name(get_control_mode()),
   114   2                     adc_normalized_list[0],
   115   2                     adc_normalized_list[1],
-C251 COMPILER V5.60.0,  main                                                               24/01/26  18:53:03  PAGE 3   
+C251 COMPILER V5.60.0,  main                                                               25/01/26  01:33:53  PAGE 3   
 
   116   2                     adc_normalized_list[2],
   117   2                     adc_normalized_list[3],
@@ -145,7 +145,7 @@ stmt  level    source
   122   2      
   123   2              // 打印IMU欧拉角数据
   124   2              printf("IMU: Roll=%.2f, Pitch=%.2f, Yaw=%.2f\r\n",
-  125   2                     imu.euler.roll, imu.euler.pitch, imu.euler.yaw);
+  125   2                     imu.roll, imu.pitch, imu.yaw);
   126   2      
   127   2              // 延时避免打印过快
   128   2              system_delay_ms(100);
@@ -203,7 +203,7 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-C251 COMPILER V5.60.0,  main                                                               24/01/26  18:53:03  PAGE 4   
+C251 COMPILER V5.60.0,  main                                                               25/01/26  01:33:53  PAGE 4   
 
   hconst size          =       161     ------
 End of Module Information.

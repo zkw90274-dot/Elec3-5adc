@@ -98,7 +98,7 @@ void main()
 		tim2_irq_handler = pit_handler_2;					  	//重写tim0中断处理函数
 
     pit_ms_init(PIT_CH_1,10);                		// 初始化 PIT 为周期中断 10ms 周期
-		pit_ms_init(PIT_CH_2,50);                		// 初始化 PIT 为周期中断 10ms 周期
+		pit_ms_init(PIT_CH_2,10);                		// 初始化 PIT 为周期中断 10ms 周期 (100Hz IMU更新)
 
     while(1)
     {
@@ -120,9 +120,11 @@ void main()
         // 打印编码器数据
         printf("Encoder: R=%d, L=%d\r\n", encoder_data_dir_R, encoder_data_dir_L);
 
-        // 打印IMU欧拉角数据
-        printf("IMU: Roll=%.2f, Pitch=%.2f, Yaw=%.2f\r\n",
-               imu.euler.roll, imu.euler.pitch, imu.euler.yaw);
+        // 打印IMU四元数和欧拉角数据
+        printf("Quaternion: q0=%.3f, q1=%.3f, q2=%.3f, q3=%.3f\r\n",
+               imu.q0, imu.q1, imu.q2, imu.q3);
+        printf("Euler: Roll=%.2f, Pitch=%.2f, Yaw=%.2f\r\n",
+               imu.roll, imu.pitch, imu.yaw);
 
         // 延时避免打印过快
         system_delay_ms(100);
@@ -147,7 +149,7 @@ void pit_handler_1 (void)
 // 参数说明     void
 // 返回参数     void
 // 使用示例     pit_handler();
-// 备注信息     50ms周期中断，更新IMU数据
+// 备注信息     10ms周期中断，更新IMU数据 (100Hz)
 //-------------------------------------------------------------------------------------------------------------------
 void pit_handler_2 (void)
 {

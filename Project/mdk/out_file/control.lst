@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  control                                                            24/01/26  18:53:03  PAGE 1   
+C251 COMPILER V5.60.0,  control                                                            25/01/26  01:31:18  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE control
@@ -66,7 +66,7 @@ stmt  level    source
    51   1          sum = SDSD->parallel_err_A * (adc_normalized_list[0] + adc_normalized_list[1] +
    52   1                                        adc_normalized_list[3] + adc_normalized_list[4]) +
    53   1                SDSD->vertival_err_C * adc_normalized_list[2] + 1;
-C251 COMPILER V5.60.0,  control                                                            24/01/26  18:53:03  PAGE 2   
+C251 COMPILER V5.60.0,  control                                                            25/01/26  01:31:18  PAGE 2   
 
    54   1      
    55   1          res = sub / sum;

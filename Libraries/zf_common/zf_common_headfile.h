@@ -109,5 +109,7 @@
 #include "control.h"
 #include "IMU.h"
 #include "task.h"
+#include "quaternion.h"
+
 #endif
 

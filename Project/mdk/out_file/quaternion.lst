@@ -1,0 +1,304 @@
+C251 COMPILER V5.60.0,  quaternion                                                         25/01/26  01:31:18  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE quaternion
+OBJECT MODULE PLACED IN .\out_file\quaternion.obj
+COMPILER INVOKED BY: E:\Tools\keil5\Keil_v5\C251\BIN\C251.EXE ..\code\quaternion.c LARGE NOALIAS WARNINGLEVEL(3) OPTIMIZ
+                    -E(SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\
+                    -zf_driver;..\user;..\code) DEBUG PRINT(.\out_file\quaternion.lst) TABS(2) OBJECT(.\out_file\quaternion.obj) 
+
+stmt  level    source
+
+    1          #include "quaternion.h"
+    2          
+    3          float my_sqrt(x)
+    4          float x;
+    5          {
+*** WARNING C35 IN LINE 5 OF ..\code\quaternion.c: 'my_sqrt': uses old-style declarator
+    6   1          float guess;
+    7   1          float epsilon;
+    8   1          uint16 i;
+    9   1      
+   10   1          guess = x;
+   11   1          epsilon = 0.00001f;
+   12   1      
+   13   1          for(i = 0; i < 20; i++)
+   14   1          {
+   15   2              guess = 0.5f * (guess + x / guess);
+   16   2              if((guess - x / guess) < epsilon)
+   17   2              {
+   18   3                  break;
+   19   3              }
+   20   2          }
+   21   1      
+   22   1          return guess;
+   23   1      }
+   24          
+   25          float my_asin(x)
+   26          float x;
+   27          {
+*** WARNING C35 IN LINE 27 OF ..\code\quaternion.c: 'my_asin': uses old-style declarator
+   28   1          float neg;
+   29   1          float result;
+   30   1          float temp;
+   31   1      
+   32   1          neg = 0;
+   33   1      
+   34   1          if(x > 1.0f)
+   35   1          {
+   36   2              x = 1.0f;
+   37   2          }
+   38   1      
+   39   1          if(x < -1.0f)
+   40   1          {
+   41   2              x = -1.0f;
+   42   2          }
+   43   1      
+   44   1          if(x < 0)
+   45   1          {
+   46   2              neg = 1;
+   47   2              x = -x;
+   48   2          }
+   49   1      
+   50   1          if(x > 0.7071f)
+   51   1          {
+   52   2              temp = 1.0f - x;
+   53   2              result = 1.57079633f - 0.5f * temp * (1.0f + temp * (0.166666f + temp * 0.075f));
+   54   2          }
+   55   1          else
+C251 COMPILER V5.60.0,  quaternion                                                         25/01/26  01:31:18  PAGE 2   
+
+   56   1          {
+   57   2              temp = x * x;
+   58   2              result = x * (1.0f + temp * (0.166666f + temp * (0.075f + temp * 0.04464f)));
+   59   2          }
+   60   1      
+   61   1          if(neg)
+   62   1          {
+   63   2              result = -result;
+   64   2          }
+   65   1      
+   66   1          return result;
+   67   1      }
+   68          
+   69          float my_atan2(y, x)
+   70          float y;
+   71          float x;
+   72          {
+*** WARNING C35 IN LINE 72 OF ..\code\quaternion.c: 'my_atan2': uses old-style declarator
+   73   1          float abs_x;
+   74   1          float abs_y;
+   75   1          float angle;
+   76   1          float r;
+   77   1      
+   78   1          if(x == 0.0f && y == 0.0f)
+   79   1          {
+   80   2              return 0.0f;
+   81   2          }
+   82   1      
+   83   1          if(x >= 0)
+   84   1          {
+   85   2              abs_x = x;
+   86   2          }
+   87   1          else
+   88   1          {
+   89   2              abs_x = -x;
+   90   2          }
+   91   1      
+   92   1          if(y >= 0)
+   93   1          {
+   94   2              abs_y = y;
+   95   2          }
+   96   1          else
+   97   1          {
+   98   2              abs_y = -y;
+   99   2          }
+  100   1      
+  101   1          if(abs_y > abs_x)
+  102   1          {
+  103   2              r = abs_x / abs_y;
+  104   2              angle = 1.57079633f - r * (0.1963f + r * -0.9817f);
+  105   2          }
+  106   1          else
+  107   1          {
+  108   2              r = abs_y / abs_x;
+  109   2              angle = r * (0.1963f + r * -0.9817f);
+  110   2          }
+  111   1      
+  112   1          if(x < 0)
+  113   1          {
+  114   2              angle = 3.14159265f - angle;
+  115   2          }
+  116   1      
+  117   1          if(y < 0)
+  118   1          {
+  119   2              angle = -angle;
+  120   2          }
+C251 COMPILER V5.60.0,  quaternion                                                         25/01/26  01:31:18  PAGE 3   
+
+  121   1      
+  122   1          return angle;
+  123   1      }
+  124          
+  125          float Fast_InvSqrt(x)
+  126          float x;
+  127          {
+  128   1          if(x <= 0.0f)
+  129   1          {
+  130   2              return 0.0f;
+  131   2          }
+  132   1          return 1.0f / my_sqrt(x);
+  133   1      }
+  134          
+  135          void Mahony_Init(ahrs)
+  136          struct MahonyAHRS_t *ahrs;
+  137          {
+  138   1          ahrs->q0 = 1.0f;
+  139   1          ahrs->q1 = 0.0f;
+  140   1          ahrs->q2 = 0.0f;
+  141   1          ahrs->q3 = 0.0f;
+  142   1          ahrs->integralFBx = 0.0f;
+  143   1          ahrs->integralFBy = 0.0f;
+  144   1          ahrs->integralFBz = 0.0f;
+  145   1          ahrs->inited = 1;
+  146   1      }
+  147          
+  148          void Mahony_Update(ahrs, gx, gy, gz, ax, ay, az, dt)
+  149          struct MahonyAHRS_t *ahrs;
+  150          float gx;
+  151          float gy;
+  152          float gz;
+  153          float ax;
+  154          float ay;
+  155          float az;
+  156          float dt;
+  157          {
+  158   1          float q0;
+  159   1          float q1;
+  160   1          float q2;
+  161   1          float q3;
+  162   1          float norm;
+  163   1          float vx;
+  164   1          float vy;
+  165   1          float vz;
+  166   1          float ex;
+  167   1          float ey;
+  168   1          float ez;
+  169   1          float q0_last;
+  170   1          float q1_last;
+  171   1          float q2_last;
+  172   1          float q3_last;
+  173   1      
+  174   1          q0 = ahrs->q0;
+  175   1          q1 = ahrs->q1;
+  176   1          q2 = ahrs->q2;
+  177   1          q3 = ahrs->q3;
+  178   1      
+  179   1          norm = Fast_InvSqrt(ax * ax + ay * ay + az * az);
+  180   1          ax = ax * norm;
+  181   1          ay = ay * norm;
+  182   1          az = az * norm;
+  183   1      
+  184   1          vx = 2.0f * (q1 * q3 - q0 * q2);
+  185   1          vy = 2.0f * (q0 * q1 + q2 * q3);
+  186   1          vz = q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3;
+C251 COMPILER V5.60.0,  quaternion                                                         25/01/26  01:31:18  PAGE 4   
+
+  187   1      
+  188   1          ex = ay * vz - az * vy;
+  189   1          ey = az * vx - ax * vz;
+  190   1          ez = ax * vy - ay * vx;
+  191   1      
+  192   1          ahrs->integralFBx = ahrs->integralFBx + MAHONY_KI * ex * dt;
+  193   1          ahrs->integralFBy = ahrs->integralFBy + MAHONY_KI * ey * dt;
+  194   1          ahrs->integralFBz = ahrs->integralFBz + MAHONY_KI * ez * dt;
+  195   1      
+  196   1          gx = gx + MAHONY_KP * ex + ahrs->integralFBx;
+  197   1          gy = gy + MAHONY_KP * ey + ahrs->integralFBy;
+  198   1          gz = gz + MAHONY_KP * ez + ahrs->integralFBz;
+  199   1      
+  200   1          q0_last = q0 - 0.5f * (q1 * gx + q2 * gy + q3 * gz) * dt;
+  201   1          q1_last = q1 + 0.5f * (q0 * gx + q2 * gz - q3 * gy) * dt;
+  202   1          q2_last = q2 + 0.5f * (q0 * gy - q1 * gz + q3 * gx) * dt;
+  203   1          q3_last = q3 + 0.5f * (q0 * gz + q1 * gy - q2 * gx) * dt;
+  204   1      
+  205   1          norm = Fast_InvSqrt(q0_last * q0_last + q1_last * q1_last + q2_last * q2_last + q3_last * q3_last);
+  206   1          ahrs->q0 = q0_last * norm;
+  207   1          ahrs->q1 = q1_last * norm;
+  208   1          ahrs->q2 = q2_last * norm;
+  209   1          ahrs->q3 = q3_last * norm;
+  210   1      }
+  211          
+  212          void Quaternion_ToEuler(quat, euler)
+  213          struct Quaternion_t *quat;
+  214          struct EulerAngle_t *euler;
+  215          {
+  216   1          float q0;
+  217   1          float q1;
+  218   1          float q2;
+  219   1          float q3;
+  220   1          float pitch_arg;
+  221   1      
+  222   1          q0 = quat->q0;
+  223   1          q1 = quat->q1;
+  224   1          q2 = quat->q2;
+  225   1          q3 = quat->q3;
+  226   1      
+  227   1          euler->roll = my_atan2(2.0f * (q0 * q1 + q2 * q3), 1.0f - 2.0f * (q1 * q1 + q2 * q2));
+  228   1      
+  229   1          pitch_arg = 2.0f * (q0 * q2 - q3 * q1);
+  230   1          if(pitch_arg > 1.0f)
+  231   1          {
+  232   2              pitch_arg = 1.0f;
+  233   2          }
+  234   1          if(pitch_arg < -1.0f)
+  235   1          {
+  236   2              pitch_arg = -1.0f;
+  237   2          }
+  238   1          euler->pitch = my_asin(pitch_arg);
+  239   1      
+  240   1          euler->yaw = my_atan2(2.0f * (q0 * q3 + q1 * q2), 1.0f - 2.0f * (q2 * q2 + q3 * q3));
+  241   1      
+  242   1          euler->roll = euler->roll * RAD_TO_DEG;
+  243   1          euler->pitch = euler->pitch * RAD_TO_DEG;
+  244   1          euler->yaw = euler->yaw * RAD_TO_DEG;
+  245   1      }
+  246          
+  247          void Mahony_GetEuler(ahrs, euler)
+  248          struct MahonyAHRS_t *ahrs;
+  249          struct EulerAngle_t *euler;
+  250          {
+  251   1          struct Quaternion_t quat;
+  252   1          quat.q0 = ahrs->q0;
+C251 COMPILER V5.60.0,  quaternion                                                         25/01/26  01:31:18  PAGE 5   
+
+  253   1          quat.q1 = ahrs->q1;
+  254   1          quat.q2 = ahrs->q2;
+  255   1          quat.q3 = ahrs->q3;
+  256   1          Quaternion_ToEuler(&quat, euler);
+  257   1      }
+*** WARNING C183 IN LINE 11 OF ..\code\quaternion.c: dead assignment eliminated
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =      2684     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------        104
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  4 WARNING(S),  0 ERROR(S)

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  adc                                                                24/01/26  18:53:02  PAGE 1   
+C251 COMPILER V5.60.0,  adc                                                                25/01/26  01:31:18  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE adc
@@ -66,7 +66,7 @@ stmt  level    source
    48          // 返回参数     uint16          限幅后的ADC值
    49          // 使用示例     uint16 val = limit(adc_val, 0);
    50          // 备注信息     将ADC值限制在校准的最大最小值范围内
-C251 COMPILER V5.60.0,  adc                                                                24/01/26  18:53:02  PAGE 2   
+C251 COMPILER V5.60.0,  adc                                                                25/01/26  01:31:18  PAGE 2   
 
    51          //-------------------------------------------------------------------------------------------------------
              -------------
@@ -134,7 +134,7 @@ stmt  level    source
   109   2              );
   110   2          }
   111   1      }
-C251 COMPILER V5.60.0,  adc                                                                24/01/26  18:53:02  PAGE 3   
+C251 COMPILER V5.60.0,  adc                                                                25/01/26  01:31:18  PAGE 3   
 
   112          
   113          //-------------------------------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ stmt  level    source
   169   2                  channel_index
   170   2              );
   171   2          }
-C251 COMPILER V5.60.0,  adc                                                                24/01/26  18:53:02  PAGE 4   
+C251 COMPILER V5.60.0,  adc                                                                25/01/26  01:31:18  PAGE 4   
 
   172   1      }
   173          
@@ -270,7 +270,7 @@ stmt  level    source
   229   1          else
   230   1          {
   231   2              tmp = i;
-C251 COMPILER V5.60.0,  adc                                                                24/01/26  18:53:02  PAGE 5   
+C251 COMPILER V5.60.0,  adc                                                                25/01/26  01:31:18  PAGE 5   
 
   232   2          }
   233   1      
@@ -338,7 +338,7 @@ stmt  level    source
   291   1          temp = adc_mid_sample(ch);
   292   1          max = temp;
   293   1          min = temp;
-C251 COMPILER V5.60.0,  adc                                                                24/01/26  18:53:02  PAGE 6   
+C251 COMPILER V5.60.0,  adc                                                                25/01/26  01:31:18  PAGE 6   
 
   294   1          sum = temp;
   295   1      
@@ -406,7 +406,7 @@ stmt  level    source
              -------------
   354          uint16 adc_sample_a(adc_channel_enum ch)
   355          {
-C251 COMPILER V5.60.0,  adc                                                                24/01/26  18:53:02  PAGE 7   
+C251 COMPILER V5.60.0,  adc                                                                25/01/26  01:31:18  PAGE 7   
 
   356   1          uint8 i;
   357   1          uint16 arr[7];
