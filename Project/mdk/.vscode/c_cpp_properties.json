@@ -1,0 +1,46 @@
+{
+    "configurations": [
+        {
+            "name": "STC32G",
+            "cStandard": "c89",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "${default}",
+            "includePath": [
+                "E:/Tools/keil5/Keil_v5/C251/INC",
+                "e:/Project/Elec3-5adc/Elec3-5adc/libraries/zf_common",
+                "e:/Project/Elec3-5adc/Elec3-5adc/libraries/zf_components",
+                "e:/Project/Elec3-5adc/Elec3-5adc/libraries/zf_device",
+                "e:/Project/Elec3-5adc/Elec3-5adc/libraries/zf_driver",
+                "e:/Project/Elec3-5adc/Elec3-5adc/Project/user",
+                "e:/Project/Elec3-5adc/Elec3-5adc/Project/code"
+            ],
+            "defines": [
+                "__C251__",
+                "__VSCODE_C251__",
+                "reentrant=",
+                "compact=",
+                "small=",
+                "large=",
+                "data=",
+                "idata=",
+                "pdata=",
+                "bdata=",
+                "edata=",
+                "xdata=",
+                "code=",
+                "bit=char",
+                "sbit=char",
+                "sfr=char",
+                "sfr16=int",
+                "sfr32=int",
+                "interrupt=",
+                "using=",
+                "far=",
+                "_at_=",
+                "_priority_=",
+                "_task_="
+            ]
+        }
+    ],
+    "version": 4
+}

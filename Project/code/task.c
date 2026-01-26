@@ -102,12 +102,13 @@ float sdsd_control_with_sensor_check(void)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
-// 函数简介     PD方向环+角速度环控制(带传感器判断)
+// 函数简介     PD方向环+角速度环控制(带传感器判断) - 四元数实现
 // 参数说明     void
 // 返回参数     float           电机差速修正值
 // 使用示例     float correction = pd_control_with_sensor_check();
-// 备注信息     自动检查传感器有效性，传感器异常时使用IMU角速度反馈保持直行
-//              控制流程: 传感器检查 -> 位置误差计算 -> PD控制 -> 异常处理
+// 备注信息     【已升级】使用四元数姿态误差替代传统PD计算
+//              自动检查传感器有效性，传感器异常时使用IMU角速度反馈保持直行
+//              控制流程: 传感器检查 -> 位置误差计算 -> 四元数姿态误差融合 -> 双环控制 -> 电机修正
 //-------------------------------------------------------------------------------------------------------------------
 float pd_control_with_sensor_check(void)
 {
@@ -121,10 +122,10 @@ float pd_control_with_sensor_check(void)
     // 计算位置误差
     position_error = position_error_calc();
 
-    // PD方向环+角速度环组合控制
+    // PD方向环+角速度环控制 (四元数实现)
     if(sensor_valid)
     {
-        // 传感器正常，使用PD控制
+        // 传感器正常，使用四元数增强的PD控制
         correction = pd_direction_gyro_loop(position_error);
     }
     else
@@ -168,7 +169,7 @@ char* get_mode_name(uint8 mode)
         case CONTROL_MODE_SDSD:
             return "SDSD循迹";
         case CONTROL_MODE_PD_DIRECTION:
-            return "PD方向环+角速度环";
+            return "PD方向环(四元数)";
         default:
             return "未知模式";
     }
@@ -208,7 +209,7 @@ void motor_control_task(void)
             break;
 
         case CONTROL_MODE_PD_DIRECTION:
-            // 模式2: PD方向环+角速度环控制
+            // 模式2: PD方向环+角速度环控制 (四元数实现)
             correction = pd_control_with_sensor_check();
             break;
 

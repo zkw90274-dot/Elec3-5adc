@@ -108,9 +108,15 @@ void main()
     pid_set_target(&pid_motor_left, 30.0f);    // 左电机目标速度
     pid_set_target(&pid_motor_right, 30.0f);   // 右电机目标速度
 
+    // ========== 姿态控制初始化 ==========
     // PD方向环+角速度环初始化 (用于 PD方向环控制模式)
     // Kp=2.5, Kd=0.8 (方向环) | Kp_gyro=1.2, Kd_gyro=0.3 (角速度环)
     pd_init(&pd_direction, 2.5f, 0.8f, 1.2f, 0.3f);
+
+    // 四元数姿态控制器初始化 (用于 四元数姿态控制模式)
+    // 目标姿态: roll=0, pitch=0, yaw=0 (保持水平直行)
+    // Kp_dir=2.5, Kd_dir=0.8 (方向环) | Kp_gyro=1.2, Kd_gyro=0.3 (角速度环)
+    attitude_init(0.0f, 0.0f, 0.0f, 2.5f, 0.8f, 1.2f, 0.3f);
 
     // ========== PID 菜单初始化 ==========
     UI_MenuInit();
