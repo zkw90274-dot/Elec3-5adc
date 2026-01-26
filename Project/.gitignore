@@ -1,0 +1,24 @@
+# 编译输出文件
+*.lst
+*.obj
+*.crf
+*.hex
+*.map
+*.lnp
+*.axf
+*.htm
+*.build_log.htm
+*.dcp
+*.dep
+
+# Keil/MDK 输出目录
+mdk/out_file/*
+!mdk/out_file/.gitkeep
+
+# VSCode 生成文件
+.vscode/*
+!.vscode/.gitkeep
+
+# 系统文件
+nul
+*.log

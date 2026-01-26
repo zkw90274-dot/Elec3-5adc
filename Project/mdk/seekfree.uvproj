@@ -809,6 +809,31 @@
               <FileType>1</FileType>
               <FilePath>..\code\quaternion.c</FilePath>
             </File>
+            <File>
+              <FileName>oled.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\oled.c</FilePath>
+            </File>
+            <File>
+              <FileName>codetab.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\code\codetab.h</FilePath>
+            </File>
+            <File>
+              <FileName>ui.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\ui.c</FilePath>
+            </File>
+            <File>
+              <FileName>myeeprom.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\code\myeeprom.c</FilePath>
+            </File>
+            <File>
+              <FileName>myeeprom.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\code\myeeprom.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

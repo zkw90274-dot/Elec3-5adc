@@ -1,1 +1,0 @@
-"..\code\adc.c" LARGE NOALIAS WARNINGLEVEL (3) OPTIMIZE (SIZE) BROWSE INCDIR(..\..\libraries\zf_common;..\..\libraries\zf_components;..\..\libraries\zf_device;..\..\libraries\zf_driver;..\user;..\code) DEBUG PRINT(.\out_file\adc.lst) TABS (2) OBJECT(.\out_file\adc.obj)

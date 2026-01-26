@@ -1,14 +1,10 @@
 #include "quaternion.h"
 
-float my_sqrt(x)
-float x;
+float my_sqrt(float x)
 {
-    float guess;
-    float epsilon;
+    float guess = x;
+    float epsilon = 0.00001f;
     uint16 i;
-
-    guess = x;
-    epsilon = 0.00001f;
 
     for(i = 0; i < 20; i++)
     {
@@ -22,8 +18,7 @@ float x;
     return guess;
 }
 
-float my_asin(x)
-float x;
+float my_asin(float x)
 {
     float neg;
     float result;
@@ -66,9 +61,7 @@ float x;
     return result;
 }
 
-float my_atan2(y, x)
-float y;
-float x;
+float my_atan2(float y, float x)
 {
     float abs_x;
     float abs_y;
@@ -122,8 +115,7 @@ float x;
     return angle;
 }
 
-float Fast_InvSqrt(x)
-float x;
+float Fast_InvSqrt(float x)
 {
     if(x <= 0.0f)
     {
@@ -132,8 +124,7 @@ float x;
     return 1.0f / my_sqrt(x);
 }
 
-void Mahony_Init(ahrs)
-struct MahonyAHRS_t *ahrs;
+void Mahony_Init(struct MahonyAHRS_t *ahrs)
 {
     ahrs->q0 = 1.0f;
     ahrs->q1 = 0.0f;
@@ -145,15 +136,8 @@ struct MahonyAHRS_t *ahrs;
     ahrs->inited = 1;
 }
 
-void Mahony_Update(ahrs, gx, gy, gz, ax, ay, az, dt)
-struct MahonyAHRS_t *ahrs;
-float gx;
-float gy;
-float gz;
-float ax;
-float ay;
-float az;
-float dt;
+void Mahony_Update(struct MahonyAHRS_t *ahrs, float gx, float gy, float gz,
+                   float ax, float ay, float az, float dt)
 {
     float q0;
     float q1;
@@ -209,9 +193,7 @@ float dt;
     ahrs->q3 = q3_last * norm;
 }
 
-void Quaternion_ToEuler(quat, euler)
-struct Quaternion_t *quat;
-struct EulerAngle_t *euler;
+void Quaternion_ToEuler(struct Quaternion_t *quat, struct EulerAngle_t *euler)
 {
     float q0;
     float q1;
@@ -244,9 +226,7 @@ struct EulerAngle_t *euler;
     euler->yaw = euler->yaw * RAD_TO_DEG;
 }
 
-void Mahony_GetEuler(ahrs, euler)
-struct MahonyAHRS_t *ahrs;
-struct EulerAngle_t *euler;
+void Mahony_GetEuler(struct MahonyAHRS_t *ahrs, struct EulerAngle_t *euler)
 {
     struct Quaternion_t quat;
     quat.q0 = ahrs->q0;
