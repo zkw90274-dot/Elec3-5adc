@@ -1,6 +1,6 @@
 /*********************************************************************************************************************
  * @file        ui.c
- * @brief       OLED UI 显示界面实现 + PID 参数调节菜单
+ * @brief       OLED UI 显示界面实现 + PID 参数调节菜单 (优化版)
  * @platform    STC32G
  * @chip        SSD1306 (128x64 OLED)
 ********************************************************************************************************************/
@@ -17,7 +17,7 @@
 
 static ui_menu_t menu;
 
-// 参数名称数组
+// 参数名称数组 (简化显示)
 static char* item_names[UI_PID_COUNT];
 
 /*==================================================================================================================*/
@@ -25,10 +25,10 @@ static char* item_names[UI_PID_COUNT];
 /*==================================================================================================================*/
 
 static void init_item_names(void);
-static void display_menu(void);
 static void display_menu_normal(void);
 static void display_menu_edit(void);
 static void display_menu_save(void);
+static void display_edit_value(uint8 show);
 
 /*==================================================================================================================*/
 /* =============== UI 基础函数 =============== */
@@ -263,6 +263,9 @@ void UI_MenuInit(void)
     menu.value = UI_MenuGetItemValue(menu.item);
     menu.blink_cnt = 0;
     menu.save_cnt = 0;
+
+    // 初始显示
+    display_menu_normal();
 }
 
 /**
@@ -270,8 +273,14 @@ void UI_MenuInit(void)
  */
 void UI_MenuUpdate(void)
 {
+    uint8 need_redraw = 0;
+    uint8 new_blink_state;
+
     // 更新闪烁计数器
     menu.blink_cnt++;
+
+    // 计算新的闪烁状态 (每100ms切换一次)
+    new_blink_state = (menu.blink_cnt / MENU_BLINK_PERIOD) % 2;
 
     // 更新保存提示计数器
     if(menu.save_cnt > 0)
@@ -280,18 +289,21 @@ void UI_MenuUpdate(void)
         if(menu.save_cnt == 0)
         {
             menu.state = UI_MENU_NORMAL;
+            need_redraw = 1;
         }
     }
 
     // 按键处理
     Key_Disp();
 
+    // 状态机处理
     if(menu.state == UI_MENU_NORMAL)
     {
-        // 普通模式：按键1进入编辑模式
+        // 普通模式：KEY1 进入编辑模式
         if(key_down == KEY1)
         {
             UI_MenuEnterEdit();
+            need_redraw = 1;
         }
     }
     else if(menu.state == UI_MENU_EDIT)
@@ -299,32 +311,52 @@ void UI_MenuUpdate(void)
         // 编辑模式
         if(key_down == KEY1)
         {
-            // 切换到下一个参数
+            // 切换到下一个参数 (需要完整重绘)
             UI_MenuNextItem();
+            need_redraw = 1;
         }
         else if(key_down == KEY2)
         {
-            // 减少参数
+            // 减少参数 (只更新数值，不清屏)
             UI_MenuDecrease(MENU_STEP);
-            // 保存到 EEPROM
-            UI_MenuSave();
+            display_edit_value(1);  // 直接显示新数值
         }
         else if(key_down == KEY3)
         {
-            // 增加参数
+            // 增加参数 (只更新数值，不清屏)
             UI_MenuIncrease(MENU_STEP);
-            // 保存到 EEPROM
-            UI_MenuSave();
+            display_edit_value(1);  // 直接显示新数值
         }
         else if(key_down == KEY4)
         {
             // 退出编辑模式
             UI_MenuExitEdit();
+            need_redraw = 1;
         }
     }
 
-    // 显示菜单
-    display_menu();
+    // 显示菜单 (只在需要时重绘)
+    if(menu.state == UI_MENU_SAVE)
+    {
+        if(need_redraw) display_menu_save();
+    }
+    else if(menu.state == UI_MENU_EDIT)
+    {
+        // 编辑模式：闪烁状态改变或需要重绘时更新
+        if(new_blink_state != (menu.blink_cnt / MENU_BLINK_PERIOD) % 2)
+        {
+            // 闪烁状态切换，只更新数值显示
+            display_edit_value(new_blink_state);
+        }
+        else if(need_redraw)
+        {
+            display_menu_edit();  // 完整重绘
+        }
+    }
+    else  // UI_MENU_NORMAL
+    {
+        if(need_redraw) display_menu_normal();
+    }
 }
 
 /**
@@ -451,31 +483,12 @@ float* UI_MenuGetItemValue(ui_pid_item_t item)
  */
 static void init_item_names(void)
 {
-    item_names[UI_PID_LEFT_KP]  = "L-kp";
-    item_names[UI_PID_LEFT_KI]  = "L-ki";
-    item_names[UI_PID_LEFT_KD]  = "L-kd";
-    item_names[UI_PID_RIGHT_KP] = "R-kp";
-    item_names[UI_PID_RIGHT_KI] = "R-ki";
-    item_names[UI_PID_RIGHT_KD] = "R-kd";
-}
-
-/**
- * @brief       显示菜单界面
- */
-static void display_menu(void)
-{
-    if(menu.state == UI_MENU_SAVE)
-    {
-        display_menu_save();
-    }
-    else if(menu.state == UI_MENU_EDIT)
-    {
-        display_menu_edit();
-    }
-    else
-    {
-        display_menu_normal();
-    }
+    item_names[UI_PID_LEFT_KP]  = "Lp";    // 简化显示
+    item_names[UI_PID_LEFT_KI]  = "Li";
+    item_names[UI_PID_LEFT_KD]  = "Ld";
+    item_names[UI_PID_RIGHT_KP] = "Rp";
+    item_names[UI_PID_RIGHT_KI] = "Ri";
+    item_names[UI_PID_RIGHT_KD] = "Rd";
 }
 
 /**
@@ -486,16 +499,12 @@ static void display_menu_normal(void)
     // 清屏
     OLED_Clear();
 
-    // 标题
-    OLED_ShowString(1, 1, "PID Menu");
-    OLED_ShowString(1, 10, "K1=Edit");
+    // 标题行: "PID MENU     K1=Edit"
+    OLED_ShowString(UI_TITLE_LINE, 1, "PID MENU");
+    OLED_ShowString(UI_TITLE_LINE, 10, "K1=Edit");
 
-    // 显示左右电机参数
-    OLED_ShowString(2, 1, "L:");
-    OLED_ShowNum(2, 3, (int32)(pid_motor_left.kp * 100), 4);
-
-    OLED_ShowString(3, 1, "R:");
-    OLED_ShowNum(3, 3, (int32)(pid_motor_right.kp * 100), 4);
+    // 第3行: 提示信息
+    OLED_ShowString(3, 1, "KEY1=Edit");
 }
 
 /**
@@ -503,38 +512,62 @@ static void display_menu_normal(void)
  */
 static void display_menu_edit(void)
 {
-    uint8 show_cursor;
-    float value;
     int32 display_val;
+    uint8 blink_state;
 
     // 清屏
     OLED_Clear();
 
-    // 标题
-    OLED_ShowString(1, 1, "PID Edit");
-    OLED_ShowString(1, 10, "<>Adj");
+    // 标题行: "PID EDIT      <>Adj"
+    OLED_ShowString(UI_TITLE_LINE, 1, "PID EDIT");
+    OLED_ShowString(UI_TITLE_LINE, 10, "<>Adj");
 
-    // 显示当前选中的参数
-    show_cursor = ((menu.blink_cnt / MENU_BLINK_PERIOD) % 2) == 0;
-
-    // 当前选中项
+    // 第2行: 当前选中项 "> Lp:  1200"
     OLED_ShowString(2, 1, ">");
     OLED_ShowString(2, 2, UI_MenuGetItemName(menu.item));
-    OLED_ShowString(2, 7, ":");
+    OLED_ShowString(2, 5, ":");
 
     // 显示参数值 (x100 显示两位小数)
-    value = *menu.value;
-    display_val = (int32)(value * 100);
-    if(show_cursor)
+    display_val = (int32)(*menu.value * 100);
+    blink_state = (menu.blink_cnt / MENU_BLINK_PERIOD) % 2;
+    if(blink_state)
     {
-        OLED_ShowSignedNum(2, 8, display_val, 4);
+        OLED_ShowSignedNum(2, 6, display_val, 4);
+    }
+    else
+    {
+        OLED_ShowString(2, 6, "    ");  // 闪烁时清空
     }
 
-    // 显示下一个参数提示
+    // 第4行: 显示下一个参数提示
     if(menu.item + 1 < UI_PID_COUNT)
     {
         OLED_ShowString(4, 1, "Next:");
         OLED_ShowString(4, 6, UI_MenuGetItemName(menu.item + 1));
+    }
+    else
+    {
+        OLED_ShowString(4, 1, "Next: Lp");  // 循环回到第一个
+    }
+}
+
+/**
+ * @brief       只更新编辑模式的数值部分 (用于闪烁效果和参数调整)
+ * @param   show    是否显示数值 (1=显示, 0=隐藏)
+ */
+static void display_edit_value(uint8 show)
+{
+    int32 display_val;
+
+    display_val = (int32)(*menu.value * 100);
+
+    if(show)
+    {
+        OLED_ShowSignedNum(2, 6, display_val, 4);
+    }
+    else
+    {
+        OLED_ShowString(2, 6, "    ");  // 清空数值
     }
 }
 
@@ -544,5 +577,5 @@ static void display_menu_edit(void)
 static void display_menu_save(void)
 {
     OLED_Clear();
-    OLED_ShowString(2, 4, "Saved!");
+    OLED_ShowString(2, 5, "SAVED!");
 }

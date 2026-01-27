@@ -54,7 +54,6 @@ void pit_handler_2(void);
 float left_target = 0;										//左轮目标值
 float right_target = 0;								 	//右轮目标值
 uint8 imu_state = 0;                                          // IMU初始化状态
-uint8 menu_mode = 0;                                          // 菜单模式标志: 0=正常显示, 1=菜单模式
 
 void main()
 {
@@ -88,7 +87,7 @@ void main()
     // SDSD初始化 (用于 SDSD 控制模式)
     SDSD_init(&SDSD, 1.0f, 1.0f, 1.0f);
     pid_init(&pid_SDSD, 2.0f, 0.0f, 0.5f);    // SDSD的PID参数: Kp=2.0, Ki=0, Kd=0.5
-    pid_set_target(&pid_SDSD, 0);             // SDSD期望偏差为0(居中)
+    pid_SDSD.target = 0;                      // SDSD期望偏差为0(居中)
 
     // ========== 电机速度环PID初始化 (从 EEPROM 加载或使用默认值) ==========
     // 尝试从 EEPROM 加载 PID 参数，如果失败则使用默认值
@@ -105,8 +104,8 @@ void main()
 
     // 设置目标速度 (单位: 编码器计数值每10ms)
     // 根据实际测试调整，建议从20-50开始
-    pid_set_target(&pid_motor_left, 30.0f);    // 左电机目标速度
-    pid_set_target(&pid_motor_right, 30.0f);   // 右电机目标速度
+    pid_motor_left.target = 30.0f;   // 左电机目标速度
+    pid_motor_right.target = 30.0f;  // 右电机目标速度
 
     // ========== 姿态控制初始化 ==========
     // PD方向环+角速度环初始化 (用于 PD方向环控制模式)
@@ -154,51 +153,10 @@ void main()
         printf("Euler: Roll=%.2f, Pitch=%.2f, Yaw=%.2f\r\n",
                imu.roll, imu.pitch, imu.yaw);
 
-        // ========== 显示模式选择 ==========
-        if(menu_mode == 0)
-        {
-            // ========== 正常显示模式 ==========
-            // 显示标题
-            UI_ShowTitle("STC32G Car");
-
-            // 显示编码器数据
-            OLED_ShowString(2, 1, "L:");
-            OLED_ShowSignedNum(2, 3, encoder_data_dir_L, 4);
-            OLED_ShowString(2, 8, "R:");
-            OLED_ShowSignedNum(2, 10, encoder_data_dir_R, 4);
-
-            // 显示IMU姿态角
-            OLED_ShowString(3, 1, "P:");
-            OLED_ShowSignedNum(3, 3, (int32)imu.pitch, 4);
-            OLED_ShowString(3, 8, "Y:");
-            OLED_ShowSignedNum(3, 10, (int32)imu.yaw, 4);
-
-            // 显示状态
-            OLED_ShowString(4, 1, "K1=Menu");
-
-            // ========== 按键功能 ==========
-            // 按键处理（检测按键事件）
-            Key_Disp();
-
-            // 按键1: 进入菜单模式
-            if(key_down == KEY1)
-            {
-                menu_mode = 1;
-                OLED_Clear();  // 清屏进入菜单
-            }
-        }
-        else
-        {
-            // ========== 菜单模式 ==========
-            UI_MenuUpdate();
-
-            // 按键4: 退出菜单模式
-            if(key_down == KEY4)
-            {
-                menu_mode = 0;
-                OLED_Clear();  // 清屏返回正常显示
-            }
-        }
+        // ========== PID 菜单显示 ==========
+        // 显示速度环PID参数，支持按键调节
+        // KEY1: 切换参数项 | KEY2: 减小 | KEY3: 增大 | KEY4: 保存到EEPROM
+        UI_MenuUpdate();
 
         // 延时避免打印过快
         system_delay_ms(100);
